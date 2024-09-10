@@ -86,15 +86,13 @@ class ParametersConfig:
     plots: list[str] = field(default_factory=lambda: PLOTS)
     """List of colony dynamics plots."""
 
-    feature_distributions: ParametersConfigFeatureDistributions = (
-        ParametersConfigFeatureDistributions()
-    )
+    feature_distributions: ParametersConfigFeatureDistributions = field(default_factory=lambda: ParametersConfigFeatureDistributions)
     """Parameters for plot feature distributions subflow."""
 
-    feature_temporal: ParametersConfigFeatureTemporal = ParametersConfigFeatureTemporal()
+    feature_temporal: ParametersConfigFeatureTemporal = field(default_factory=lambda: ParametersConfigFeatureTemporal)
     """Parameters for plot feature temporal subflow."""
 
-    neighbor_positions: ParametersConfigNeighborPositions = ParametersConfigNeighborPositions()
+    neighbor_positions: ParametersConfigNeighborPositions = field(default_factory=lambda: ParametersConfigNeighborPositions)
     """Parameters for plot neighbor positions subflow."""
 
 

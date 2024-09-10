@@ -177,18 +177,16 @@ class ParametersConfig:
     groups: list[str] = field(default_factory=lambda: GROUPS)
     """List of colony dynamics groups."""
 
-    colony_contours: ParametersConfigColonyContours = ParametersConfigColonyContours()
+    colony_contours: ParametersConfigColonyContours = field(default_factory=lambda: ParametersConfigColonyContours)
     """Parameters for group colony contours subflow."""
 
-    feature_distributions: ParametersConfigFeatureDistributions = (
-        ParametersConfigFeatureDistributions()
-    )
+    feature_distributions: ParametersConfigFeatureDistributions = field(default_factory=lambda: ParametersConfigFeatureDistributions)
     """Parameters for group feature distributions subflow."""
 
-    feature_temporal: ParametersConfigFeatureTemporal = ParametersConfigFeatureTemporal()
+    feature_temporal: ParametersConfigFeatureTemporal = field(default_factory=lambda: ParametersConfigFeatureTemporal)
     """Parameters for group feature temporal subflow."""
 
-    neighbor_positions: ParametersConfigNeighborPositions = ParametersConfigNeighborPositions()
+    neighbor_positions: ParametersConfigNeighborPositions = field(default_factory=lambda: ParametersConfigNeighborPositions)
     """Parameters for group neighbor positions subflow."""
 
 
