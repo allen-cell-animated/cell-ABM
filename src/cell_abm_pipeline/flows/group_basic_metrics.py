@@ -243,22 +243,34 @@ class ParametersConfig:
     groups: list[str] = field(default_factory=lambda: GROUPS)
     """List of basic metrics groups."""
 
-    metrics_bins: ParametersConfigMetricsBins = field(default_factory=lambda: ParametersConfigMetricsBins)
+    metrics_bins: ParametersConfigMetricsBins = field(
+        default_factory=lambda: ParametersConfigMetricsBins
+    )
     """Parameters for group metrics bins subflow."""
 
-    metrics_distributions: ParametersConfigMetricsDistributions = field(default_factory=lambda: ParametersConfigMetricsDistributions)
+    metrics_distributions: ParametersConfigMetricsDistributions = field(
+        default_factory=lambda: ParametersConfigMetricsDistributions
+    )
     """Parameters for group metrics distributions subflow."""
 
-    metrics_individuals: ParametersConfigMetricsIndividuals = field(default_factory=lambda: ParametersConfigMetricsIndividuals)
+    metrics_individuals: ParametersConfigMetricsIndividuals = field(
+        default_factory=lambda: ParametersConfigMetricsIndividuals
+    )
     """Parameters for group metrics individuals subflow."""
 
-    metrics_spatial: ParametersConfigMetricsSpatial = field(default_factory=lambda: ParametersConfigMetricsSpatial)
+    metrics_spatial: ParametersConfigMetricsSpatial = field(
+        default_factory=lambda: ParametersConfigMetricsSpatial
+    )
     """Parameters for group metrics spatial subflow."""
 
-    metrics_temporal: ParametersConfigMetricsTemporal = field(default_factory=lambda: ParametersConfigMetricsTemporal)
+    metrics_temporal: ParametersConfigMetricsTemporal = field(
+        default_factory=lambda: ParametersConfigMetricsTemporal
+    )
     """Parameters for group metrics temporal subflow."""
 
-    population_counts: ParametersConfigPopulationCounts = field(default_factory=lambda: ParametersConfigPopulationCounts)
+    population_counts: ParametersConfigPopulationCounts = field(
+        default_factory=lambda: ParametersConfigPopulationCounts
+    )
     """Parameters for group population counts subflow."""
 
 

@@ -244,13 +244,19 @@ class ParametersConfig:
     meshes: ParametersConfigMeshes = field(default_factory=lambda: ParametersConfigMeshes)
     """Parameters for meshes subflow."""
 
-    projections: ParametersConfigProjections = field(default_factory=lambda: ParametersConfigProjections)
+    projections: ParametersConfigProjections = field(
+        default_factory=lambda: ParametersConfigProjections
+    )
     """Parameters for projections subflow."""
 
-    simularium_shapes: ParametersConfigSimulariumShapes = field(default_factory=lambda: ParametersConfigSimulariumShapes)
+    simularium_shapes: ParametersConfigSimulariumShapes = field(
+        default_factory=lambda: ParametersConfigSimulariumShapes
+    )
     """Parameters for simularium shapes subflow."""
 
-    simularium_objects: ParametersConfigSimulariumObjects = field(default_factory=lambda: ParametersConfigSimulariumObjects)
+    simularium_objects: ParametersConfigSimulariumObjects = field(
+        default_factory=lambda: ParametersConfigSimulariumObjects
+    )
     """Parameters for simularium objects subflow."""
 
 

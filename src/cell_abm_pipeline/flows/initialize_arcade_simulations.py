@@ -147,7 +147,9 @@ class ParametersConfig:
     process_samples: dict[str, ParametersConfigProcessSample]
     """Configs for process samples flow, keyed by region."""
 
-    convert_to_arcade: ParametersConfigConvertToArcade = field(default_factory=lambda: ParametersConfigConvertToArcade)
+    convert_to_arcade: ParametersConfigConvertToArcade = field(
+        default_factory=lambda: ParametersConfigConvertToArcade
+    )
     """Convert to ARCADE configuration instance."""
 
 

@@ -78,7 +78,9 @@ class ParametersConfig:
     groups: list[str] = field(default_factory=lambda: GROUPS)
     """List of resource usages groups."""
 
-    object_storage: ParametersConfigObjectStorage = field(default_factory=lambda: ParametersConfigObjectStorage)
+    object_storage: ParametersConfigObjectStorage = field(
+        default_factory=lambda: ParametersConfigObjectStorage
+    )
     """Parameters for group object storage subflow."""
 
     wall_clock: ParametersConfigWallClock = field(default_factory=lambda: ParametersConfigWallClock)
