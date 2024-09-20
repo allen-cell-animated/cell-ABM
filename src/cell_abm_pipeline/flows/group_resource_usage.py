@@ -79,11 +79,13 @@ class ParametersConfig:
     """List of resource usages groups."""
 
     object_storage: ParametersConfigObjectStorage = field(
-        default_factory=lambda: ParametersConfigObjectStorage
+        default_factory=lambda: ParametersConfigObjectStorage()
     )
     """Parameters for group object storage subflow."""
 
-    wall_clock: ParametersConfigWallClock = field(default_factory=lambda: ParametersConfigWallClock)
+    wall_clock: ParametersConfigWallClock = field(
+        default_factory=lambda: ParametersConfigWallClock()
+    )
     """Parameters for group wall clock subflow."""
 
 

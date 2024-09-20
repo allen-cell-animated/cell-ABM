@@ -199,47 +199,47 @@ class ParametersConfig:
     """List of cell shape plots."""
 
     feature_correlations: ParametersConfigFeatureCorrelations = field(
-        default_factory=lambda: ParametersConfigFeatureCorrelations
+        default_factory=lambda: ParametersConfigFeatureCorrelations()
     )
     """Parameters for plot feature correlations subflow."""
 
     feature_distributions: ParametersConfigFeatureDistributions = field(
-        default_factory=lambda: ParametersConfigFeatureDistributions
+        default_factory=lambda: ParametersConfigFeatureDistributions()
     )
     """Parameters for plot feature distributions subflow."""
 
     mode_correlations: ParametersConfigModeCorrelations = field(
-        default_factory=lambda: ParametersConfigModeCorrelations
+        default_factory=lambda: ParametersConfigModeCorrelations()
     )
     """Parameters for plot mode correlations subflow."""
 
     population_counts: ParametersConfigPopulationCounts = field(
-        default_factory=lambda: ParametersConfigPopulationCounts
+        default_factory=lambda: ParametersConfigPopulationCounts()
     )
     """Parameters for plot population counts subflow."""
 
     population_stats: ParametersConfigPopulationStats = field(
-        default_factory=lambda: ParametersConfigPopulationStats
+        default_factory=lambda: ParametersConfigPopulationStats()
     )
     """Parameters for plot population stats subflow."""
 
     shape_average: ParametersConfigShapeAverage = field(
-        default_factory=lambda: ParametersConfigShapeAverage
+        default_factory=lambda: ParametersConfigShapeAverage()
     )
     """Parameters for plot shape average subflow."""
 
     shape_errors: ParametersConfigShapeErrors = field(
-        default_factory=lambda: ParametersConfigShapeErrors
+        default_factory=lambda: ParametersConfigShapeErrors()
     )
     """Parameters for plot shape errors subflow."""
 
     shape_modes: ParametersConfigShapeModes = field(
-        default_factory=lambda: ParametersConfigShapeModes
+        default_factory=lambda: ParametersConfigShapeModes()
     )
     """Parameters for plot shape modes subflow."""
 
     variance_explained: ParametersConfigVarianceExplained = field(
-        default_factory=lambda: ParametersConfigVarianceExplained
+        default_factory=lambda: ParametersConfigVarianceExplained()
     )
     """Parameters for plot variance explained subflow."""
 

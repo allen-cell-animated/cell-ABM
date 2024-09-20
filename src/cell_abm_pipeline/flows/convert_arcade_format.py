@@ -235,27 +235,29 @@ class ParametersConfig:
     formats: list[str] = field(default_factory=lambda: FORMATS)
     """List of convert formats."""
 
-    colorizer: ParametersConfigColorizer = field(default_factory=lambda: ParametersConfigColorizer)
+    colorizer: ParametersConfigColorizer = field(
+        default_factory=lambda: ParametersConfigColorizer()
+    )
     """Parameters for colorizer subflow."""
 
-    images: ParametersConfigImages = field(default_factory=lambda: ParametersConfigImages)
+    images: ParametersConfigImages = field(default_factory=lambda: ParametersConfigImages())
     """Parameters for images subflow."""
 
-    meshes: ParametersConfigMeshes = field(default_factory=lambda: ParametersConfigMeshes)
+    meshes: ParametersConfigMeshes = field(default_factory=lambda: ParametersConfigMeshes())
     """Parameters for meshes subflow."""
 
     projections: ParametersConfigProjections = field(
-        default_factory=lambda: ParametersConfigProjections
+        default_factory=lambda: ParametersConfigProjections()
     )
     """Parameters for projections subflow."""
 
     simularium_shapes: ParametersConfigSimulariumShapes = field(
-        default_factory=lambda: ParametersConfigSimulariumShapes
+        default_factory=lambda: ParametersConfigSimulariumShapes()
     )
     """Parameters for simularium shapes subflow."""
 
     simularium_objects: ParametersConfigSimulariumObjects = field(
-        default_factory=lambda: ParametersConfigSimulariumObjects
+        default_factory=lambda: ParametersConfigSimulariumObjects()
     )
     """Parameters for simularium objects subflow."""
 

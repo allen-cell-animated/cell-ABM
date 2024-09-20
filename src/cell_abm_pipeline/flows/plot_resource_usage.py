@@ -56,11 +56,13 @@ class ParametersConfig:
     """List of resource usage plots."""
 
     object_storage: ParametersConfigObjectStorage = field(
-        default_factory=lambda: ParametersConfigObjectStorage
+        default_factory=lambda: ParametersConfigObjectStorage()
     )
     """Parameters for plot object storage subflow."""
 
-    wall_clock: ParametersConfigWallClock = field(default_factory=lambda: ParametersConfigWallClock)
+    wall_clock: ParametersConfigWallClock = field(
+        default_factory=lambda: ParametersConfigWallClock()
+    )
     """Parameters for plot wall clock subflow."""
 
 

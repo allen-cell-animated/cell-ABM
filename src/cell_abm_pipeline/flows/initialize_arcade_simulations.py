@@ -148,7 +148,7 @@ class ParametersConfig:
     """Configs for process samples flow, keyed by region."""
 
     convert_to_arcade: ParametersConfigConvertToArcade = field(
-        default_factory=lambda: ParametersConfigConvertToArcade
+        default_factory=lambda: ParametersConfigConvertToArcade()
     )
     """Convert to ARCADE configuration instance."""
 
