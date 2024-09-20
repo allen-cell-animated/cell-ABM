@@ -437,44 +437,65 @@ class ParametersConfig:
     groups: list[str] = field(default_factory=lambda: GROUPS)
     """List of cell shapes groups."""
 
-    feature_components: ParametersConfigFeatureComponents = ParametersConfigFeatureComponents()
+    feature_components: ParametersConfigFeatureComponents = field(
+        default_factory=lambda: ParametersConfigFeatureComponents
+    )
     """Parameters for group feature components subflow."""
 
-    feature_correlations: ParametersConfigFeatureCorrelations = (
-        ParametersConfigFeatureCorrelations()
+    feature_correlations: ParametersConfigFeatureCorrelations = field(
+        default_factory=lambda: ParametersConfigFeatureCorrelations
     )
+
     """Parameters for group feature correlations subflow."""
 
-    feature_distributions: ParametersConfigFeatureDistributions = (
-        ParametersConfigFeatureDistributions()
+    feature_distributions: ParametersConfigFeatureDistributions = field(
+        default_factory=lambda: ParametersConfigFeatureDistributions
     )
     """Parameters for group feature distributions subflow."""
 
-    mode_correlations: ParametersConfigModeCorrelations = ParametersConfigModeCorrelations()
+    mode_correlations: ParametersConfigModeCorrelations = field(
+        default_factory=lambda: ParametersConfigModeCorrelations
+    )
     """Parameters for group mode correlations subflow."""
 
-    population_counts: ParametersConfigPopulationCounts = ParametersConfigPopulationCounts()
+    population_counts: ParametersConfigPopulationCounts = field(
+        default_factory=lambda: ParametersConfigPopulationCounts
+    )
     """Parameters for group population counts subflow."""
 
-    population_stats: ParametersConfigPopulationStats = ParametersConfigPopulationStats()
+    population_stats: ParametersConfigPopulationStats = field(
+        default_factory=lambda: ParametersConfigPopulationStats
+    )
     """Parameters for group population stats subflow."""
 
-    shape_average: ParametersConfigShapeAverage = ParametersConfigShapeAverage()
+    shape_average: ParametersConfigShapeAverage = field(
+        default_factory=lambda: ParametersConfigShapeAverage
+    )
     """Parameters for group shape average subflow."""
 
-    shape_contours: ParametersConfigShapeContours = ParametersConfigShapeContours()
+    shape_contours: ParametersConfigShapeContours = field(
+        default_factory=lambda: ParametersConfigShapeContours
+    )
     """Parameters for group shape contours subflow."""
 
-    shape_errors: ParametersConfigShapeErrors = ParametersConfigShapeErrors()
+    shape_errors: ParametersConfigShapeErrors = field(
+        default_factory=lambda: ParametersConfigShapeErrors
+    )
     """Parameters for group shape errors subflow."""
 
-    shape_modes: ParametersConfigShapeModes = ParametersConfigShapeModes()
+    shape_modes: ParametersConfigShapeModes = field(
+        default_factory=lambda: ParametersConfigShapeModes
+    )
     """Parameters for group shape modes subflow."""
 
-    shape_samples: ParametersConfigShapeSamples = ParametersConfigShapeSamples()
+    shape_samples: ParametersConfigShapeSamples = field(
+        default_factory=lambda: ParametersConfigShapeSamples
+    )
     """Parameters for group shape samples subflow."""
 
-    variance_explained: ParametersConfigVarianceExplained = ParametersConfigVarianceExplained()
+    variance_explained: ParametersConfigVarianceExplained = field(
+        default_factory=lambda: ParametersConfigVarianceExplained
+    )
     """Parameters for group variance explained subflow."""
 
 

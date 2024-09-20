@@ -178,24 +178,34 @@ class ParametersConfig:
     plots: list[str] = field(default_factory=lambda: PLOTS)
     """List of basic metric plots."""
 
-    metrics_bins: ParametersConfigMetricsBins = ParametersConfigMetricsBins()
+    metrics_bins: ParametersConfigMetricsBins = field(
+        default_factory=lambda: ParametersConfigMetricsBins
+    )
     """Parameters for plot metrics bins subflow."""
 
-    metrics_distributions: ParametersConfigMetricsDistributions = (
-        ParametersConfigMetricsDistributions()
+    metrics_distributions: ParametersConfigMetricsDistributions = field(
+        default_factory=lambda: ParametersConfigMetricsDistributions
     )
     """Parameters for plot metrics distributions subflow."""
 
-    metrics_individuals: ParametersConfigMetricsIndividuals = ParametersConfigMetricsIndividuals()
+    metrics_individuals: ParametersConfigMetricsIndividuals = field(
+        default_factory=lambda: ParametersConfigMetricsIndividuals
+    )
     """Parameters for plot metrics individuals subflow."""
 
-    metrics_spatial: ParametersConfigMetricsSpatial = ParametersConfigMetricsSpatial()
+    metrics_spatial: ParametersConfigMetricsSpatial = field(
+        default_factory=lambda: ParametersConfigMetricsSpatial
+    )
     """Parameters for plot metrics spatial subflow."""
 
-    metrics_temporal: ParametersConfigMetricsTemporal = ParametersConfigMetricsTemporal()
+    metrics_temporal: ParametersConfigMetricsTemporal = field(
+        default_factory=lambda: ParametersConfigMetricsTemporal
+    )
     """Parameters for plot metrics temporal subflow."""
 
-    population_counts: ParametersConfigPopulationCounts = ParametersConfigPopulationCounts()
+    population_counts: ParametersConfigPopulationCounts = field(
+        default_factory=lambda: ParametersConfigPopulationCounts
+    )
     """Parameters for plot population counts subflow."""
 
 

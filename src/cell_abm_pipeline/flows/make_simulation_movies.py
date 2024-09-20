@@ -105,10 +105,10 @@ class ParametersConfig:
     formats: list[str] = field(default_factory=lambda: FORMATS)
     """List of movie formats."""
 
-    scan: ParametersConfigScan = ParametersConfigScan()
+    scan: ParametersConfigScan = field(default_factory=lambda: ParametersConfigScan)
     """Parameters for scan movie subflow."""
 
-    centroids: ParametersConfigCentroids = ParametersConfigCentroids()
+    centroids: ParametersConfigCentroids = field(default_factory=lambda: ParametersConfigCentroids)
     """Parameters for centroids movie subflow."""
 
 
