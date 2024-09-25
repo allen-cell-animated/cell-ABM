@@ -16,7 +16,7 @@ io-collection = "^1.1.0"
 container-collection = "^1.1.0"
 arcade-collection = "^0.16.0"
 abm-initialization-collection = "^0.7.0"
-abm-shape-collection = { path = "../abm-shape-collection", develop = true }
+abm-shape-collection = "^0.10.0"
 abm-colony-collection = { path = "../abm-colony-collection", develop = true }
 
 [tool.poetry.group.dev.dependencies]
