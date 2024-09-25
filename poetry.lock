@@ -23,26 +23,24 @@ url = "../abm-colony-collection"
 
 [[package]]
 name = "abm-initialization-collection"
-version = "0.6.1"
+version = "0.7.0"
 description = "Collection of tasks for initializing ABM simulations."
 optional = false
-python-versions = "^3.9"
-files = []
-develop = true
+python-versions = "<4.0,>=3.9"
+files = [
+    {file = "abm_initialization_collection-0.7.0-py3-none-any.whl", hash = "sha256:cc6e50d5f5e586e939f446223d0c75e8159ca46e0f4bfba97a47ae32342e2c00"},
+    {file = "abm_initialization_collection-0.7.0.tar.gz", hash = "sha256:b6983347f2c0e1cb91c3a6107ad16e65c1ce7e4011405c0a32566af352daa735"},
+]
 
 [package.dependencies]
-bioio = "^1.0.0"
-hexalattice = "^1.2.1"
-matplotlib = "^3.7.0"
-numpy = "^1.24.2"
-pandas = "^1.5.3"
-prefect = "^2.8.2"
-scikit-image = "^0.21.0"
-scipy = "^1.13.0"
-
-[package.source]
-type = "directory"
-url = "../abm-initialization-collection"
+bioio = ">=1.0.0,<2.0.0"
+hexalattice = ">=1.2.1,<2.0.0"
+matplotlib = ">=3.7.0,<4.0.0"
+numpy = ">=1.24.2,<2.0.0"
+pandas = ">=1.5.3,<2.0.0"
+prefect = ">=2.8.2,<3.0.0"
+scikit-image = ">=0.21.0,<0.22.0"
+scipy = ">=1.13.0,<2.0.0"
 
 [[package]]
 name = "abm-shape-collection"
@@ -5982,4 +5980,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "efa968063330b4508f6ae5adcfc13c327d33ac106feda1d43c849c68810d35d6"
+content-hash = "1fd9227bdcff1f6de43160ca6c886028332610292228f81eac9fe73a451406d3"
