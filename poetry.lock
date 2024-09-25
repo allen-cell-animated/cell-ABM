@@ -351,24 +351,22 @@ requests-oauthlib = "*"
 
 [[package]]
 name = "arcade-collection"
-version = "0.15.0"
+version = "0.16.0"
 description = "Collection of tasks for working with ARCADE."
 optional = false
-python-versions = "^3.9"
-files = []
-develop = true
+python-versions = "<4.0,>=3.9"
+files = [
+    {file = "arcade_collection-0.16.0-py3-none-any.whl", hash = "sha256:32316ad595831ba6cf2c224a65fe5baed0d3212eedb4b14354c88fd177850a67"},
+    {file = "arcade_collection-0.16.0.tar.gz", hash = "sha256:09a4be8af6cb3f1127f41be57f31ba7d13a7fd128ef034a3ab28ee6e58e49a73"},
+]
 
 [package.dependencies]
-matplotlib = "^3.7.2"
-numpy = "^1.24.2"
-pandas = "^1.5.3"
-prefect = "^2.14.3"
-scikit-image = "^0.21.0"
-simulariumio = "^1.7.0"
-
-[package.source]
-type = "directory"
-url = "../arcade-collection"
+matplotlib = ">=3.7.2,<4.0.0"
+numpy = ">=1.24.2,<2.0.0"
+pandas = ">=1.5.3,<2.0.0"
+prefect = ">=2.14.3,<3.0.0"
+scikit-image = ">=0.21.0,<0.22.0"
+simulariumio = ">=1.7.0,<2.0.0"
 
 [[package]]
 name = "asciitree"
@@ -5988,4 +5986,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "939f6b23d2d90f9eca5f3e41d2b814c8b6acfa1b6d0712d3585a23ac5feed202"
+content-hash = "1964c8a3ff443b764781a2810ac448289420581c0c942c6b7ae2461c9c1834af"

@@ -113,7 +113,9 @@ appdirs==1.4.4 ; python_version >= "3.9" and python_version < "4.0" \
 apprise==1.9.0 ; python_version >= "3.9" and python_version < "4.0" \
     --hash=sha256:7192c953eeb282a7afee012512d3de0104b5a6a11bdda29283435df5a79dfe7f \
     --hash=sha256:b5c93afd6331afe4b63a55d1cea9076e47becb4ba89b562b181c13e25bb0c7d6
-arcade-collection @ file:///home/jessica/Documents/arcade-collection ; python_version >= "3.9" and python_version < "4.0"
+arcade-collection==0.16.0 ; python_version >= "3.9" and python_version < "4.0" \
+    --hash=sha256:09a4be8af6cb3f1127f41be57f31ba7d13a7fd128ef034a3ab28ee6e58e49a73 \
+    --hash=sha256:32316ad595831ba6cf2c224a65fe5baed0d3212eedb4b14354c88fd177850a67
 asciitree==0.3.3 ; python_version >= "3.9" and python_version < "4.0" \
     --hash=sha256:4aa4b9b649f85e3fcb343363d97564aa1fb62e249677f2e18a96765145cc0f6e
 asgi-lifespan==2.0.0 ; python_version >= "3.9" and python_version < "4.0" \

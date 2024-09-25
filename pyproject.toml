@@ -14,7 +14,7 @@ prefect = "^2.14.3"
 hydra-core = "^1.2.0"
 io-collection = { path = "../io-collection", develop = true }
 container-collection = { path = "../container-collection", develop = true }
-arcade-collection = { path = "../arcade-collection", develop = true }
+arcade-collection = "^0.16.0"
 abm-initialization-collection = { path = "../abm-initialization-collection", develop = true }
 abm-shape-collection = { path = "../abm-shape-collection", develop = true }
 abm-colony-collection = { path = "../abm-colony-collection", develop = true }
