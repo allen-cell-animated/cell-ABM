@@ -199,47 +199,43 @@ class ParametersConfig:
     """List of cell shape plots."""
 
     feature_correlations: ParametersConfigFeatureCorrelations = field(
-        default_factory=lambda: ParametersConfigFeatureCorrelations()
+        default_factory=ParametersConfigFeatureCorrelations
     )
     """Parameters for plot feature correlations subflow."""
 
     feature_distributions: ParametersConfigFeatureDistributions = field(
-        default_factory=lambda: ParametersConfigFeatureDistributions()
+        default_factory=ParametersConfigFeatureDistributions
     )
     """Parameters for plot feature distributions subflow."""
 
     mode_correlations: ParametersConfigModeCorrelations = field(
-        default_factory=lambda: ParametersConfigModeCorrelations()
+        default_factory=ParametersConfigModeCorrelations
     )
     """Parameters for plot mode correlations subflow."""
 
     population_counts: ParametersConfigPopulationCounts = field(
-        default_factory=lambda: ParametersConfigPopulationCounts()
+        default_factory=ParametersConfigPopulationCounts
     )
     """Parameters for plot population counts subflow."""
 
     population_stats: ParametersConfigPopulationStats = field(
-        default_factory=lambda: ParametersConfigPopulationStats()
+        default_factory=ParametersConfigPopulationStats
     )
     """Parameters for plot population stats subflow."""
 
     shape_average: ParametersConfigShapeAverage = field(
-        default_factory=lambda: ParametersConfigShapeAverage()
+        default_factory=ParametersConfigShapeAverage
     )
     """Parameters for plot shape average subflow."""
 
-    shape_errors: ParametersConfigShapeErrors = field(
-        default_factory=lambda: ParametersConfigShapeErrors()
-    )
+    shape_errors: ParametersConfigShapeErrors = field(default_factory=ParametersConfigShapeErrors)
     """Parameters for plot shape errors subflow."""
 
-    shape_modes: ParametersConfigShapeModes = field(
-        default_factory=lambda: ParametersConfigShapeModes()
-    )
+    shape_modes: ParametersConfigShapeModes = field(default_factory=ParametersConfigShapeModes)
     """Parameters for plot shape modes subflow."""
 
     variance_explained: ParametersConfigVarianceExplained = field(
-        default_factory=lambda: ParametersConfigVarianceExplained()
+        default_factory=ParametersConfigVarianceExplained
     )
     """Parameters for plot variance explained subflow."""
 
@@ -364,7 +360,9 @@ def run_flow_plot_feature_distributions(
             make_key(group_key, f"{series.name}.feature_distributions.{feature_key}.json"),
         )
 
-        assert isinstance(group, dict)
+        if not isinstance(group, dict):
+            message = "Grouped data for feature distributions should be a dict."
+            raise TypeError(message)
 
         save_figure(
             context.working_location,
@@ -451,7 +449,7 @@ def run_flow_plot_population_counts(
 
 @flow(name="plot-cell-shapes_plot-population-stats")
 def run_flow_plot_population_stats(
-    context: ContextConfig, series: SeriesConfig, parameters: ParametersConfigPopulationStats
+    context: ContextConfig, series: SeriesConfig, _: ParametersConfigPopulationStats
 ) -> None:
     """Plot cell shapes subflow for population stats."""
 
@@ -477,9 +475,7 @@ def run_flow_plot_population_stats(
 def run_flow_plot_shape_average(
     context: ContextConfig, series: SeriesConfig, parameters: ParametersConfigShapeAverage
 ) -> None:
-    """
-    Plot cell shapes subflow for shape average.
-    """
+    """Plot cell shapes subflow for shape average."""
 
     group_key = make_key(series.name, "groups", "groups.CELL_SHAPES")
     plot_key = make_key(series.name, "plots", "plots.CELL_SHAPES")
@@ -492,7 +488,9 @@ def run_flow_plot_shape_average(
                 make_key(group_key, f"{series.name}.shape_average.{key}.{projection.upper()}.json"),
             )
 
-            assert isinstance(group, dict)
+            if not isinstance(group, dict):
+                message = "Grouped data for shape average should be a dict."
+                raise TypeError(message)
 
             elements = [
                 {"points": item, "stroke": "#000", "stroke-width": 0.2}
@@ -530,7 +528,7 @@ def run_flow_plot_shape_average(
 
 @flow(name="plot-cell-shapes_plot-shape-errors")
 def run_flow_plot_shape_errors(
-    context: ContextConfig, series: SeriesConfig, parameters: ParametersConfigShapeErrors
+    context: ContextConfig, series: SeriesConfig, _: ParametersConfigShapeErrors
 ) -> None:
     """Plot cell shapes subflow for shape errors."""
 
@@ -556,9 +554,7 @@ def run_flow_plot_shape_errors(
 def run_flow_plot_shape_modes(
     context: ContextConfig, series: SeriesConfig, parameters: ParametersConfigShapeModes
 ) -> None:
-    """
-    Plot cell shapes subflow for shape modes.
-    """
+    """Plot cell shapes subflow for shape modes."""
 
     group_key = make_key(series.name, "groups", "groups.CELL_SHAPES")
     plot_key = make_key(series.name, "plots", "plots.CELL_SHAPES")
@@ -578,7 +574,9 @@ def run_flow_plot_shape_modes(
                         make_key(group_key, f"{series.name}.shape_modes.{full_key}.json"),
                     )
 
-                    assert isinstance(group, list)
+                    if not isinstance(group, list):
+                        message = "Grouped data for shape modes should be a list."
+                        raise TypeError(message)
 
                     elements = elements + [
                         {

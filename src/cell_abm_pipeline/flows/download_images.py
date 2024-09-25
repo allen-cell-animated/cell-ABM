@@ -13,7 +13,7 @@ from abm_initialization_collection.image import select_fov_images
 from io_collection.keys import check_key, make_key
 from io_collection.load import load_dataframe
 from io_collection.quilt import load_quilt_package, save_quilt_item
-from prefect import flow
+from prefect import flow, get_run_logger
 
 
 @dataclass
@@ -62,6 +62,8 @@ class SeriesConfig:
 def run_flow(context: ContextConfig, series: SeriesConfig, parameters: ParametersConfig) -> None:
     """Main download images flow."""
 
+    logger = get_run_logger()
+
     package = load_quilt_package(parameters.quilt_package, parameters.quilt_registry)
     key_exists = check_key(context.metadata_location, series.metadata_key)
 
@@ -86,8 +88,8 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
     )
 
     for fov in selected_fovs:
-        print(f"key: {fov['key']}")
-        print(f"include_ids: {', '.join([str(cell_id) for cell_id in fov['cell_ids']])}")
+        logger.info("Downloading key [ %s ]", fov["key"])
+        logger.info("Include ids [ %s ]", " | ".join([str(cell_id) for cell_id in fov["cell_ids"]]))
         fov_key = make_key(series.name, "images", f"{series.name}_{fov['key']}.ome.tiff")
         key_exists = check_key(context.working_location, fov_key)
 

@@ -56,7 +56,7 @@ class ParametersConfig:
     """Parameter configuration for analyze colony dynamics flow."""
 
     ds: float = 1.0
-    """Spatial scaling in units/um."""
+    """Spatial scaling in um/voxel."""
 
     dt: float = 1.0
     """Temporal scaling in hours/tick."""
@@ -138,7 +138,7 @@ def run_flow_process_data(
             results = load_dataframe(context.working_location, results_key)
             results["KEY"] = key
             results["SEED"] = seed
-            results.set_index(INDEX_COLUMNS, inplace=True)
+            results = results.set_index(INDEX_COLUMNS)
             all_results.append(results)
 
             # Load neighbors.
@@ -148,7 +148,7 @@ def run_flow_process_data(
             neighbors = load_dataframe(
                 context.working_location, neighbors_key, converters={"NEIGHBORS": ast.literal_eval}
             )
-            neighbors.set_index(INDEX_COLUMNS, inplace=True)
+            neighbors = neighbors.set_index(INDEX_COLUMNS)
             all_neighbors.append(neighbors)
 
         results_data = pd.concat(all_results)
@@ -169,7 +169,7 @@ def run_flow_process_data(
 
 @flow(name="analyze-colony-dynamics_generate-networks")
 def run_flow_generate_networks(
-    context: ContextConfig, series: SeriesConfig, parameters: ParametersConfig
+    context: ContextConfig, series: SeriesConfig, _: ParametersConfig
 ) -> None:
     """
     Analyze colony dynamics subflow for generating network objects.

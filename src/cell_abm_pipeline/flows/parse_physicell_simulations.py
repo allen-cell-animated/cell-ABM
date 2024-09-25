@@ -32,7 +32,7 @@ class ParametersConfig:
     include_filters: list[str] = field(default_factory=lambda: ["*"])
     """List of Unix filename patterns for files to include in parsing."""
 
-    exclude_filters: list[str] = field(default_factory=lambda: [])
+    exclude_filters: list[str] = field(default_factory=list)
     """List of Unix filename patterns for files to exclude from parsing."""
 
 

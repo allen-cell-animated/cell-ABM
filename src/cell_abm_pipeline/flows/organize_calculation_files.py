@@ -7,9 +7,10 @@ After verifying that the file exists in the archive, the individual tick
 calculation file is removed.
 """
 
+from __future__ import annotations
+
 import re
 from dataclasses import dataclass
-from typing import Optional
 
 import pandas as pd
 from io_collection.keys import check_key, make_key, remove_key
@@ -28,7 +29,7 @@ class ParametersConfig:
     ticks: list[int]
     """List of ticks to run flow on."""
 
-    region: Optional[str] = None
+    region: str | None = None
     """Subcellular region name."""
 
 

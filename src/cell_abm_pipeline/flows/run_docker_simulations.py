@@ -33,9 +33,12 @@ Note that this workflow works only if working location is local. For S3 working
 locations, use the run batch simulations flow instead.
 """
 
-from dataclasses import dataclass, field
-from typing import Optional, Union
+from __future__ import annotations
 
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+import docker
 from arcade_collection.input import group_template_conditions
 from container_collection.docker import (
     check_docker_job,
@@ -53,9 +56,11 @@ from io_collection.keys import copy_key, make_key
 from io_collection.load import load_dataframe, load_text
 from io_collection.save import save_text
 from prefect import flow, get_run_logger
-from prefect.server.schemas.states import State
 
 from cell_abm_pipeline.tasks.physicell import render_physicell_template
+
+if TYPE_CHECKING:
+    from prefect.states import State
 
 
 @dataclass
@@ -126,10 +131,10 @@ class SeriesConfig:
     extensions: list[str]
     """List of file extensions in complete run."""
 
-    inits: list[dict] = field(default_factory=lambda: [])
+    inits: list[dict] = field(default_factory=list)
     """Initialization keys and associated group names."""
 
-    groups: dict[str, Optional[str]] = field(default_factory=lambda: {"_": ""})
+    groups: dict[str, str | None] = field(default_factory=lambda: {"_": ""})
     """Initialization groups, keyed by group name."""
 
 
@@ -142,25 +147,23 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
         logger.error("Docker simulations can only be run with local working location.")
         return
 
+    client = docker.APIClient(base_url="unix://var/run/docker.sock")
+
     manifest = load_dataframe(context.manifest_location, series.manifest_key)
     template = load_text(context.template_location, series.template_key)
 
     job_key = make_key(context.working_location, series.name, "{{timestamp}}")
-    volume = create_docker_volume(job_key)
+    volume = create_docker_volume(client, job_key)
 
     all_container_ids: list[str] = []
 
-    for group in series.groups.keys():
+    for group in series.groups:
         if series.groups[group] is None:
             continue
 
         group_key = series.name if group == "_" else f"{series.name}_{group}"
-        group_conditions = [
-            condition
-            for condition in series.conditions
-            if group is "_" or condition["group"] == group
-        ]
-        group_inits = [init for init in series.inits if group == "_" or init["group"] == group]
+        group_conditions = [cond for cond in series.conditions if group == cond.get("group", "_")]
+        group_inits = [init for init in series.inits if group == init.get("group", "_")]
 
         # Find missing conditions.
         missing_conditions = find_missing_conditions(
@@ -203,33 +206,40 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
             input_key = make_key(series.name, "{{timestamp}}", "inputs", f"{group_key}_{index}.xml")
             save_text(context.working_location, input_key, input_content)
 
-            job_definition = make_docker_job(group_key, parameters.image, index)
-            container_id = submit_docker_job(job_definition, volume)
+            environment = [
+                "SIMULATION_TYPE=LOCAL",
+                f"FILE_SET_NAME={group_key}",
+                f"JOB_ARRAY_INDEX={index}",
+            ]
+            job_definition = make_docker_job(f"{group_key}_{index}", parameters.image, environment)
+            container_id = submit_docker_job(client, job_definition, volume)
             all_container_ids.append(container_id)
 
-    all_jobs: list[Union[int, State]] = []
+    all_jobs: list[int | State] = []
 
     for container_id in all_container_ids:
         exitcode = check_docker_job.with_options(
             retries=parameters.retries, retry_delay_seconds=parameters.retry_delay
-        ).submit(container_id, parameters.retries)
+        ).submit(client, container_id, parameters.retries)
 
         wait_for = [exitcode]
 
         if parameters.terminate_jobs:
-            terminate_status = terminate_docker_job.submit(container_id, wait_for=wait_for)
+            terminate_status = terminate_docker_job.submit(client, container_id, wait_for=wait_for)
             wait_for = [terminate_status]
 
         if parameters.save_logs:
-            logs = get_docker_logs.submit(container_id, parameters.log_filter, wait_for=wait_for)
+            logs = get_docker_logs.submit(
+                client, container_id, parameters.log_filter, wait_for=wait_for
+            )
             log_key = make_key(series.name, "{{timestamp}}", "logs", f"{container_id}.log")
             save_text.submit(context.working_location, log_key, logs)
             wait_for = [logs]
 
         if parameters.clean_jobs:
-            clean = clean_docker_job.submit(container_id, wait_for=wait_for)
+            clean = clean_docker_job.submit(client, container_id, wait_for=wait_for)
             wait_for = [clean]
 
         all_jobs = all_jobs + wait_for
 
-    remove_docker_volume.submit(volume, wait_for=all_jobs)
+    remove_docker_volume.submit(client, volume, wait_for=all_jobs)

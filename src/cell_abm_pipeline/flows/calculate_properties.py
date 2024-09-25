@@ -24,8 +24,9 @@ output key extension starts with ``.(offset).(chunk).`` to specify the index
 offset and chunk size.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional
 
 import pandas as pd
 from abm_shape_collection import get_shape_properties, make_voxels_array
@@ -63,10 +64,10 @@ class ParametersConfig:
     offset: int = 0
     """Index offset for skipped calculations."""
 
-    chunk: Optional[int] = None
+    chunk: int | None = None
     """Number of indices to calculate, starting from offset."""
 
-    region: Optional[str] = None
+    region: str | None = None
     """Subcellular region to calculate."""
 
     properties: list[str] = field(default_factory=lambda: SHAPE_PROPERTIES)

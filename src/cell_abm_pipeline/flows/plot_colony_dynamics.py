@@ -87,17 +87,17 @@ class ParametersConfig:
     """List of colony dynamics plots."""
 
     feature_distributions: ParametersConfigFeatureDistributions = field(
-        default_factory=lambda: ParametersConfigFeatureDistributions()
+        default_factory=ParametersConfigFeatureDistributions
     )
     """Parameters for plot feature distributions subflow."""
 
     feature_temporal: ParametersConfigFeatureTemporal = field(
-        default_factory=lambda: ParametersConfigFeatureTemporal()
+        default_factory=ParametersConfigFeatureTemporal
     )
     """Parameters for plot feature temporal subflow."""
 
     neighbor_positions: ParametersConfigNeighborPositions = field(
-        default_factory=lambda: ParametersConfigNeighborPositions()
+        default_factory=ParametersConfigNeighborPositions
     )
     """Parameters for plot neighbor positions subflow."""
 
@@ -161,7 +161,9 @@ def run_flow_plot_feature_distributions(
             make_key(group_key, f"{series.name}.feature_distributions.{feature_key}.json"),
         )
 
-        assert isinstance(group, dict)
+        if not isinstance(group, dict):
+            message = "Grouped data for feature distributions should be a dict."
+            raise TypeError(message)
 
         save_figure(
             context.working_location,
@@ -189,7 +191,9 @@ def run_flow_plot_feature_temporal(
                 make_key(group_key, f"{series.name}.feature_temporal.{feature_key}.json"),
             )
 
-            assert isinstance(group, dict)
+            if not isinstance(group, dict):
+                message = "Grouped data for temporal features should be a dict."
+                raise TypeError(message)
 
             save_figure(
                 context.working_location,

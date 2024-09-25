@@ -21,7 +21,8 @@ cell id and tick.
 
 from dataclasses import dataclass, field
 
-from arcade_collection.output import merge_parsed_results, parse_cells_file, parse_locations_file
+import pandas as pd
+from arcade_collection.output import parse_cells_file, parse_locations_file
 from container_collection.manifest import filter_manifest_files
 from io_collection.keys import check_key, make_key
 from io_collection.load import load_dataframe, load_tar
@@ -33,13 +34,13 @@ from prefect import flow
 class ParametersConfig:
     """Parameter configuration for parse arcade simulations flow."""
 
-    regions: list[str] = field(default_factory=lambda: [])
+    regions: list[str] = field(default_factory=list)
     """List of subcellular regions to parse."""
 
     include_filters: list[str] = field(default_factory=lambda: ["*"])
     """List of Unix filename patterns for files to include in parsing."""
 
-    exclude_filters: list[str] = field(default_factory=lambda: [])
+    exclude_filters: list[str] = field(default_factory=list)
     """List of Unix filename patterns for files to exclude from parsing."""
 
 
@@ -85,9 +86,11 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
 
         cells_tar = load_tar(**files["CELLS.tar.xz"])
         cells = parse_cells_file(cells_tar, parameters.regions)
+        cells = cells.set_index(["ID", "TICK"])
 
         locs_tar = load_tar(**files["LOCATIONS.tar.xz"])
         locs = parse_locations_file(locs_tar, parameters.regions)
+        locs = locs.set_index(["ID", "TICK"])
 
-        results = merge_parsed_results(cells, locs)
+        results = pd.concat([cells, locs], axis=1).reset_index()
         save_dataframe(context.working_location, results_key, results, index=False)

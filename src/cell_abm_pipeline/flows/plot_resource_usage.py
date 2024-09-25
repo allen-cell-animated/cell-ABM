@@ -56,13 +56,11 @@ class ParametersConfig:
     """List of resource usage plots."""
 
     object_storage: ParametersConfigObjectStorage = field(
-        default_factory=lambda: ParametersConfigObjectStorage()
+        default_factory=ParametersConfigObjectStorage
     )
     """Parameters for plot object storage subflow."""
 
-    wall_clock: ParametersConfigWallClock = field(
-        default_factory=lambda: ParametersConfigWallClock()
-    )
+    wall_clock: ParametersConfigWallClock = field(default_factory=ParametersConfigWallClock)
     """Parameters for plot wall clock subflow."""
 
 
@@ -132,7 +130,7 @@ def run_flow_plot_object_storage(
 
 @flow(name="plot-resource-usage_plot-wall-clock")
 def run_flow_plot_wall_clock(
-    context: ContextConfig, series: SeriesConfig, parameters: ParametersConfigWallClock
+    context: ContextConfig, series: SeriesConfig, _: ParametersConfigWallClock
 ) -> None:
     """Plot resource usage subflow for wall clock."""
 

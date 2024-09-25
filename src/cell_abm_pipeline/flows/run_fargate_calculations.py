@@ -22,10 +22,11 @@ useful for conditions that require more CPUs/memory than are available.
 Note that this workflow works only if working location is an S3 bucket.
 """
 
+from __future__ import annotations
+
 import importlib
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 import pandas as pd
 from container_collection.fargate import (
@@ -65,16 +66,16 @@ class ParametersConfig:
     ticks: list[int]
     """List of ticks to run flow on."""
 
-    calculate: Optional[Calculation] = None
+    calculate: Calculation | None = None
     """Calculation type."""
 
-    chunk: Optional[int] = None
+    chunk: int | None = None
     """Chunk size, if possible for the given calculation type."""
 
     submit_tasks: bool = True
     """True to submit calculation tasks, False otherwise."""
 
-    overrides: dict = field(default_factory=lambda: {})
+    overrides: dict = field(default_factory=dict)
     """Overrides for the specific calculation type."""
 
 
@@ -154,14 +155,16 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
 
     # Create and register the task definition for the calculation.
     if parameters.submit_tasks:
+        account = context.account
         task_definition = make_fargate_task(
             module_name,
-            parameters.image,
-            context.account,
+            f"{account}.dkr.ecr.{context.region}.amazonaws.com/{context.user}/{parameters.image}",
             context.region,
             context.user,
             context.vcpus,
             context.memory,
+            f"arn:aws:iam::{account}:role/BatchJobRole",
+            f"arn:aws:iam::{account}:role/ecsTaskExecutionRole",
         )
         task_definition_arn = register_fargate_task(task_definition)
 
@@ -245,7 +248,7 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
                         "parameters": parameters_config,
                     }
 
-                    command = ["abmpipe", module_name, "::"] + make_dotlist_from_config(config)
+                    command = ["abmpipe", module_name, "::", *make_dotlist_from_config(config)]
 
                     if parameters.submit_tasks:
                         submit_fargate_task.with_options(retries=2, retry_delay_seconds=1)(
@@ -258,7 +261,7 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
                             command,
                         )
                     else:
-                        print(" ".join(command))
+                        logger.info(" ".join(command))
 
                 # If all chunk results exist, compile into unchunked result.
                 if (
@@ -266,11 +269,10 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
                     and len(completed_offset_keys) == len(all_offsets)
                     and chunk is not None
                 ):
-                    tick_calcs = []
-
-                    for key in completed_offset_keys:
-                        tick_calcs.append(load_dataframe(context.working_location, key))
-
+                    tick_calcs = [
+                        load_dataframe(context.working_location, key)
+                        for key in completed_offset_keys
+                    ]
                     calc_dataframe = pd.concat(tick_calcs, ignore_index=True)
                     save_dataframe(context.working_location, tick_key, calc_dataframe, index=False)
 

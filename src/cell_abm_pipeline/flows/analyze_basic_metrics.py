@@ -15,14 +15,14 @@ Working location structure:
 Data from **results** are processed into **analysis.BASIC_METRICS**.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import timedelta
-from itertools import groupby
-from typing import Optional
 
 import pandas as pd
 from arcade_collection.output import convert_model_units
-from io_collection.keys import check_key, make_key
+from io_collection.keys import check_key, group_keys, make_key
 from io_collection.load import load_dataframe
 from io_collection.save import save_dataframe
 from prefect import flow, get_run_logger
@@ -42,10 +42,10 @@ class ParametersConfig:
     regions: list[str] = field(default_factory=lambda: ["DEFAULT"])
     """List of subcellular regions."""
 
-    ds: Optional[float] = None
-    """Spatial scaling in units/um."""
+    ds: float | None = None
+    """Spatial scaling in um/voxel."""
 
-    dt: Optional[float] = None
+    dt: float | None = None
     """Temporal scaling in hours/tick."""
 
 
@@ -100,23 +100,18 @@ def run_flow_process_results(
     results_path_key = make_key(series.name, "results")
     metrics_path_key = make_key(series.name, "analysis", "analysis.BASIC_METRICS")
 
-    keys = [condition["key"].split("_") for condition in series.conditions]
-    superkeys = {
-        superkey: ["_".join(k) for k in key_group]
-        for index in range(len(keys[0]))
-        for superkey, key_group in groupby(sorted(keys, key=lambda k: k[index]), lambda k: k[index])
-    }
+    key_groups = group_keys([condition["key"] for condition in series.conditions])
 
-    for superkey, key_group in superkeys.items():
-        logger.info("Processing results for superkey [ %s ]", superkey)
-        metrics_key = make_key(metrics_path_key, f"{series.name}_{superkey}.BASIC_METRICS.csv")
+    for key_group, keys in key_groups.items():
+        logger.info("Processing results for key group [ %s ]", key_group)
+        metrics_key = make_key(metrics_path_key, f"{series.name}_{key_group}.BASIC_METRICS.csv")
 
         if check_key(context.working_location, metrics_key):
             continue
 
         all_results = []
 
-        for key in key_group:
+        for key in keys:
             for seed in series.seeds:
                 results_key = make_key(results_path_key, f"{series.name}_{key}_{seed:04d}.csv")
                 results = load_dataframe.with_options(**OPTIONS)(

@@ -19,8 +19,9 @@ to calculate properties. Calculations are saved to **calculations.PROPERTIES**.
 If region is specified, the region is included in the output key.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional
 
 import pandas as pd
 from abm_shape_collection import get_shape_properties
@@ -48,7 +49,7 @@ class ParametersConfig:
     channel: int
     """Index of channel to calculate."""
 
-    region: Optional[str] = None
+    region: str | None = None
     """Subcellular region to calculate."""
 
     properties: list[str] = field(default_factory=lambda: SHAPE_PROPERTIES)
@@ -82,8 +83,9 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
     results = load_dataframe(context.working_location, results_key)
 
     all_props = []
+    fields = ["ID", "IMAGE"]
 
-    for cell_id, image_file in results[results["TICK"] == parameters.tick][["ID", "IMAGE"]].values:
+    for cell_id, image_file in results[results["TICK"] == parameters.tick][fields].to_numpy():
         image = load_image("s3://allencell", f"aics/hipsc_single_cell_image_dataset/{image_file}")
         array = image.get_image_data("ZYX", T=0, C=parameters.channel)
         props = get_shape_properties(array, parameters.properties)

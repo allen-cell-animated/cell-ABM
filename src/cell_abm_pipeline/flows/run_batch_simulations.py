@@ -31,8 +31,9 @@ Note that this workflow works only if working location is an S3 bucket. For
 local working locations, use the run docker simulations flow instead.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional
 
 from arcade_collection.input import group_template_conditions
 from container_collection.batch import (
@@ -139,10 +140,10 @@ class SeriesConfig:
     extensions: list[str]
     """List of file extensions in complete run."""
 
-    inits: list[dict] = field(default_factory=lambda: [])
+    inits: list[dict] = field(default_factory=list)
     """Initialization keys and associated group names."""
 
-    groups: dict[str, Optional[str]] = field(default_factory=lambda: {"_": ""})
+    groups: dict[str, str | None] = field(default_factory=lambda: {"_": ""})
     """Initialization groups, keyed by group name."""
 
 
@@ -160,17 +161,13 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
 
     all_job_arns: list[str] = []
 
-    for group in series.groups.keys():
+    for group in series.groups:
         if series.groups[group] is None:
             continue
 
         group_key = series.name if group == "_" else f"{series.name}_{group}"
-        group_conditions = [
-            condition
-            for condition in series.conditions
-            if group == "_" or condition["group"] == group
-        ]
-        group_inits = [init for init in series.inits if group == "_" or init["group"] == group]
+        group_conditions = [cond for cond in series.conditions if group == cond.get("group", "_")]
+        group_inits = [init for init in series.inits if group == init.get("group", "_")]
 
         # Find missing conditions.
         missing_conditions = find_missing_conditions(

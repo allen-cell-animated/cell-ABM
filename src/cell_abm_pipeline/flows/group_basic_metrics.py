@@ -243,33 +243,31 @@ class ParametersConfig:
     groups: list[str] = field(default_factory=lambda: GROUPS)
     """List of basic metrics groups."""
 
-    metrics_bins: ParametersConfigMetricsBins = field(
-        default_factory=lambda: ParametersConfigMetricsBins()
-    )
+    metrics_bins: ParametersConfigMetricsBins = field(default_factory=ParametersConfigMetricsBins)
     """Parameters for group metrics bins subflow."""
 
     metrics_distributions: ParametersConfigMetricsDistributions = field(
-        default_factory=lambda: ParametersConfigMetricsDistributions()
+        default_factory=ParametersConfigMetricsDistributions
     )
     """Parameters for group metrics distributions subflow."""
 
     metrics_individuals: ParametersConfigMetricsIndividuals = field(
-        default_factory=lambda: ParametersConfigMetricsIndividuals()
+        default_factory=ParametersConfigMetricsIndividuals
     )
     """Parameters for group metrics individuals subflow."""
 
     metrics_spatial: ParametersConfigMetricsSpatial = field(
-        default_factory=lambda: ParametersConfigMetricsSpatial()
+        default_factory=ParametersConfigMetricsSpatial
     )
     """Parameters for group metrics spatial subflow."""
 
     metrics_temporal: ParametersConfigMetricsTemporal = field(
-        default_factory=lambda: ParametersConfigMetricsTemporal()
+        default_factory=ParametersConfigMetricsTemporal
     )
     """Parameters for group metrics temporal subflow."""
 
     population_counts: ParametersConfigPopulationCounts = field(
-        default_factory=lambda: ParametersConfigPopulationCounts()
+        default_factory=ParametersConfigPopulationCounts
     )
     """Parameters for group population counts subflow."""
 
@@ -351,8 +349,8 @@ def run_flow_group_metrics_bins(
         y = []
         v: dict[str, list] = {metric: [] for metric in parameters.metrics}
 
-        for (key, seed), group in metrics_df.groupby(["KEY", "SEED"]):
-            group.set_index("ID", inplace=True)
+        for (key, seed), key_seed_group in metrics_df.groupby(["KEY", "SEED"]):
+            group = key_seed_group.set_index("ID")
 
             series_key = f"{series.name}_{key}_{seed:04d}"
             positions_key = make_key(analysis_positions_key, f"{series_key}.POSITIONS.csv")
@@ -426,7 +424,7 @@ def run_flow_group_metrics_distributions(
                 )
             else:
                 column = metric.replace(".DEFAULT", "")
-                values = metrics_df[column].values
+                values = metrics_df[column].to_numpy()
 
             bounds = (parameters.bounds[metric][0], parameters.bounds[metric][1])
             bandwidth = parameters.bandwidth[metric]
@@ -598,10 +596,10 @@ def run_flow_group_metrics_temporal(
 
             temporal = {
                 "time": list(values.groups.keys()),
-                "mean": [v if not np.isnan(v) else "nan" for v in values.mean()],
-                "std": [v if not np.isnan(v) else "nan" for v in values.std(ddof=1)],
-                "min": [v if not np.isnan(v) else "nan" for v in values.min()],
-                "max": [v if not np.isnan(v) else "nan" for v in values.max()],
+                "mean": [val if not np.isnan(val) else "nan" for val in values.mean()],
+                "std": [val if not np.isnan(val) else "nan" for val in values.std(ddof=1)],
+                "min": [val if not np.isnan(val) else "nan" for val in values.min()],
+                "max": [val if not np.isnan(val) else "nan" for val in values.max()],
             }
 
             save_json(
