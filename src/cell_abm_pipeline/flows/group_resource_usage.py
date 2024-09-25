@@ -20,9 +20,9 @@ Different groups use inputs from **data** and **logs**. Grouped data are saved
 to **groups.RESOURCE_USAGE**.
 """
 
-import os
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import boto3
 import pandas as pd
@@ -47,7 +47,7 @@ LOG_PATTERN = r"simulation \[ ([A-z0-9\s\_]+) \| ([0-9]{4}) \] finished in ([0-9
 class ParametersConfigObjectStorage:
     """Parameter configuration for group resource usage subflow - object storage."""
 
-    search_locations: list[str] = field(default_factory=lambda: [])
+    search_locations: list[str] = field(default_factory=list)
     """List of locations (local paths or S3 buckets) to search for files."""
 
     categories: list[str] = field(default_factory=lambda: OBJECT_CATEGORIES)
@@ -61,13 +61,13 @@ class ParametersConfigObjectStorage:
 class ParametersConfigWallClock:
     """Parameter configuration for group resource usage subflow - wall clock."""
 
-    search_locations: list[str] = field(default_factory=lambda: [])
+    search_locations: list[str] = field(default_factory=list)
     """List of locations (local paths or S3 buckets) to search for files."""
 
     pattern: str = LOG_PATTERN
     """Pattern to match for object key, seed, and time."""
 
-    exceptions: list[str] = field(default_factory=lambda: [])
+    exceptions: list[str] = field(default_factory=list)
     """List of exception strings used to filter log files."""
 
 
@@ -79,13 +79,11 @@ class ParametersConfig:
     """List of resource usages groups."""
 
     object_storage: ParametersConfigObjectStorage = field(
-        default_factory=lambda: ParametersConfigObjectStorage()
+        default_factory=ParametersConfigObjectStorage
     )
     """Parameters for group object storage subflow."""
 
-    wall_clock: ParametersConfigWallClock = field(
-        default_factory=lambda: ParametersConfigWallClock()
-    )
+    wall_clock: ParametersConfigWallClock = field(default_factory=ParametersConfigWallClock)
     """Parameters for group wall clock subflow."""
 
 
@@ -144,12 +142,12 @@ def run_flow_group_object_storage(
                     summary = boto3.resource("s3").ObjectSummary(location[5:], file_key)
                     size = summary.size
                 else:
-                    size = os.path.getsize(f"{location}{file_key}")
+                    size = Path(f"{location}{file_key}").stat().st_size
 
                 all_sizes.append({"key": key, "seed": seed, "category": category, "size": size})
 
     sizes_df = pd.DataFrame(all_sizes)
-    sizes_df.sort_values(by=["key", "category", "seed"], ignore_index=True, inplace=True)
+    sizes_df = sizes_df.sort_values(by=["key", "category", "seed"], ignore_index=True)
 
     save_dataframe(
         context.working_location,
@@ -184,7 +182,7 @@ def run_flow_group_wall_clock(
                 all_times.append({"key": key, "seed": seed, "time": time})
 
     times_df = pd.DataFrame(all_times)
-    times_df.sort_values(by=["key", "seed"], ignore_index=True, inplace=True)
+    times_df = times_df.sort_values(by=["key", "seed"], ignore_index=True)
 
     save_dataframe(
         context.working_location,

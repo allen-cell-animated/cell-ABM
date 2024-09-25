@@ -20,7 +20,7 @@ from container_collection.manifest import summarize_manifest_files, update_manif
 from io_collection.keys import get_keys, make_key
 from io_collection.load import load_dataframe
 from io_collection.save import save_dataframe, save_text
-from prefect import flow
+from prefect import flow, get_run_logger
 
 
 @dataclass
@@ -30,13 +30,13 @@ class ParametersConfig:
     update_manifest: bool = True
     """True if the manifest file should be updated, False otherwise."""
 
-    search_locations: list[str] = field(default_factory=lambda: [])
+    search_locations: list[str] = field(default_factory=list)
     """List of locations to search for files (local path or S3 bucket)."""
 
     include_filters: list[str] = field(default_factory=lambda: ["*"])
     """List of Unix filename patterns for files to include in summary."""
 
-    exclude_filters: list[str] = field(default_factory=lambda: [])
+    exclude_filters: list[str] = field(default_factory=list)
     """List of Unix filename patterns for files to exclude from summary."""
 
 
@@ -100,4 +100,5 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
     summary_key = make_key(series.name, "{{timestamp}}", f"{series.name}.SUMMARY.txt")
     save_text(context.working_location, summary_key, summary)
 
-    print("\n" + summary)
+    logger = get_run_logger()
+    logger.info("\n%s", summary)

@@ -27,8 +27,9 @@ Plots use grouped data from **groups.BASIC_METRICS**. Plots are saved to
 **plots.BASIC_METRICS**.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional
 
 from io_collection.keys import make_key
 from io_collection.load import load_dataframe, load_json
@@ -178,33 +179,31 @@ class ParametersConfig:
     plots: list[str] = field(default_factory=lambda: PLOTS)
     """List of basic metric plots."""
 
-    metrics_bins: ParametersConfigMetricsBins = field(
-        default_factory=lambda: ParametersConfigMetricsBins()
-    )
+    metrics_bins: ParametersConfigMetricsBins = field(default_factory=ParametersConfigMetricsBins)
     """Parameters for plot metrics bins subflow."""
 
     metrics_distributions: ParametersConfigMetricsDistributions = field(
-        default_factory=lambda: ParametersConfigMetricsDistributions()
+        default_factory=ParametersConfigMetricsDistributions
     )
     """Parameters for plot metrics distributions subflow."""
 
     metrics_individuals: ParametersConfigMetricsIndividuals = field(
-        default_factory=lambda: ParametersConfigMetricsIndividuals()
+        default_factory=ParametersConfigMetricsIndividuals
     )
     """Parameters for plot metrics individuals subflow."""
 
     metrics_spatial: ParametersConfigMetricsSpatial = field(
-        default_factory=lambda: ParametersConfigMetricsSpatial()
+        default_factory=ParametersConfigMetricsSpatial
     )
     """Parameters for plot metrics spatial subflow."""
 
     metrics_temporal: ParametersConfigMetricsTemporal = field(
-        default_factory=lambda: ParametersConfigMetricsTemporal()
+        default_factory=ParametersConfigMetricsTemporal
     )
     """Parameters for plot metrics temporal subflow."""
 
     population_counts: ParametersConfigPopulationCounts = field(
-        default_factory=lambda: ParametersConfigPopulationCounts()
+        default_factory=ParametersConfigPopulationCounts
     )
     """Parameters for plot population counts subflow."""
 
@@ -316,7 +315,9 @@ def run_flow_plot_metrics_distributions(
             make_key(group_key, f"{series.name}.metrics_distributions.{metric_key}.json"),
         )
 
-        assert isinstance(group, dict)
+        if not isinstance(group, dict):
+            message = "Grouped data for metrics distributions should be a dict."
+            raise TypeError(message)
 
         save_figure(
             context.working_location,
@@ -388,7 +389,7 @@ def run_flow_plot_metrics_spatial(
                 for metric in metrics:
                     metric_key = f"{key}.{seed:04d}.{tick:06d}.{metric.upper()}"
 
-                    colormap: Optional[dict] = None
+                    colormap: dict | None = None
 
                     if metric == "phase":
                         colormap = parameters.phase_colors
@@ -437,7 +438,9 @@ def run_flow_plot_metrics_temporal(
                 make_key(group_key, f"{series.name}.metrics_temporal.{metric_key}.json"),
             )
 
-            assert isinstance(group, dict)
+            if not isinstance(group, dict):
+                message = "Grouped data for temporal metrics should be a dict."
+                raise TypeError(message)
 
             save_figure(
                 context.working_location,

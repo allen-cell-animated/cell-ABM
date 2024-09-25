@@ -35,17 +35,22 @@ Different formats use inputs from **results**, **data.CELLS**, and
 **data.LOCATIONS**. Formatted data are saved to **converted**.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 
 import numpy as np
 from arcade_collection.convert import (
-    convert_to_colorizer,
     convert_to_images,
     convert_to_meshes,
     convert_to_projection,
     convert_to_simularium_objects,
     convert_to_simularium_shapes,
+    convert_to_tfe,
 )
+from arcade_collection.convert.convert_to_images import ImageType
+from arcade_collection.convert.convert_to_meshes import MeshType
+from arcade_collection.output import convert_model_units
 from io_collection.keys import make_key
 from io_collection.load import load_dataframe, load_tar
 from io_collection.save import save_figure, save_image, save_json, save_text
@@ -55,47 +60,18 @@ from cell_abm_pipeline.flows.plot_basic_metrics import PHASE_COLORS
 from cell_abm_pipeline.flows.plot_cell_shapes import REGION_COLORS
 
 FORMATS: list[str] = [
-    "colorizer",
     "images",
     "meshes",
     "projections",
     "simularium_shapes",
     "simularium_objects",
+    "tfe",
 ]
 
-COLORIZER_FEATURES: list[str] = [
-    "volume",
-    "height",
+COLORIZER_FEATURES: list[tuple[str, str, str]] = [
+    ("volume", "Cell volume", "continuous"),
+    ("height", "Cell height", "continuous"),
 ]
-
-
-@dataclass
-class ParametersConfigColorizer:
-    """Parameter configuration for convert ARCADE format flow - colorizer."""
-
-    seeds: list[int] = field(default_factory=lambda: [0])
-    """Simulation seeds to use for converting to colorizer."""
-
-    frame_spec: tuple[int, int, int] = (0, 1153, 1152)
-    """Specification for simulation ticks to use for converting to colorizer."""
-
-    regions: list[str] = field(default_factory=lambda: ["DEFAULT"])
-    """List of subcellular regions."""
-
-    box: tuple[int, int, int] = field(default_factory=lambda: (1, 1, 1))
-    """Size of bounding box."""
-
-    ds: float = 1.0
-    """Spatial scaling in units/um."""
-
-    dt: float = 1.0
-    """Temporal scaling in hours/tick."""
-
-    chunk_size: int = 500
-    """Image chunk size."""
-
-    features: list[str] = field(default_factory=lambda: COLORIZER_FEATURES)
-    """List of colorizer features."""
 
 
 @dataclass
@@ -117,11 +93,8 @@ class ParametersConfigImages:
     chunk_size: int = 500
     """Image chunk size."""
 
-    binary: bool = False
-    """True to generate binary images, False otherwise."""
-
-    separate: bool = False
-    """True to generate separate images for each tick, False otherwise."""
+    image_type: ImageType = ImageType.FULL
+    """Image type."""
 
 
 @dataclass
@@ -140,8 +113,8 @@ class ParametersConfigMeshes:
     box: tuple[int, int, int] = field(default_factory=lambda: (1, 1, 1))
     """Size of bounding box."""
 
-    invert: bool = False
-    """True if mesh should have inverted faces, False otherwise."""
+    mesh_type: MeshType | dict[str, MeshType] = MeshType.DEFAULT
+    """Mesh type."""
 
 
 @dataclass
@@ -161,7 +134,7 @@ class ParametersConfigProjections:
     """Size of bounding box."""
 
     ds: float = 1.0
-    """Spatial scaling in units/um."""
+    """Spatial scaling in um/voxel."""
 
     dt: float = 1.0
     """Temporal scaling in hours/tick."""
@@ -186,8 +159,8 @@ class ParametersConfigSimulariumShapes:
     box: tuple[int, int, int] = field(default_factory=lambda: (1, 1, 1))
     """Size of bounding box."""
 
-    ds: float = 1.0
-    """Spatial scaling in units/um."""
+    ds: tuple[float, float, float] = (1.0, 1.0, 1.0)
+    """Spatial scaling in um/voxel."""
 
     dt: float = 1.0
     """Temporal scaling in hours/tick."""
@@ -212,8 +185,8 @@ class ParametersConfigSimulariumObjects:
     box: tuple[int, int, int] = field(default_factory=lambda: (1, 1, 1))
     """Size of bounding box."""
 
-    ds: float = 1.0
-    """Spatial scaling in units/um."""
+    ds: tuple[float, float, float] = (1.0, 1.0, 1.0)
+    """Spatial scaling in um/voxel."""
 
     dt: float = 1.0
     """Temporal scaling in hours/tick."""
@@ -229,37 +202,62 @@ class ParametersConfigSimulariumObjects:
 
 
 @dataclass
+class ParametersConfigTFE:
+    """Parameter configuration for convert ARCADE format flow - TFE."""
+
+    seeds: list[int] = field(default_factory=lambda: [0])
+    """Simulation seeds to use for converting to TFE."""
+
+    frame_spec: tuple[int, int, int] = (0, 1153, 1152)
+    """Specification for simulation ticks to use for converting to TFE."""
+
+    regions: list[str] = field(default_factory=lambda: ["DEFAULT"])
+    """List of subcellular regions."""
+
+    box: tuple[int, int, int] = field(default_factory=lambda: (1, 1, 1))
+    """Size of bounding box."""
+
+    ds: float = 1.0
+    """Spatial scaling in um/voxel."""
+
+    dt: float = 1.0
+    """Temporal scaling in hours/tick."""
+
+    chunk_size: int = 500
+    """Image chunk size."""
+
+    features: list[tuple[str, str, str]] = field(default_factory=lambda: COLORIZER_FEATURES)
+    """List of feature keys, names, and data types."""
+
+
+@dataclass
 class ParametersConfig:
     """Parameter configuration for convert ARCADE format flow."""
 
     formats: list[str] = field(default_factory=lambda: FORMATS)
     """List of convert formats."""
 
-    colorizer: ParametersConfigColorizer = field(
-        default_factory=lambda: ParametersConfigColorizer()
-    )
-    """Parameters for colorizer subflow."""
-
-    images: ParametersConfigImages = field(default_factory=lambda: ParametersConfigImages())
+    images: ParametersConfigImages = field(default_factory=ParametersConfigImages)
     """Parameters for images subflow."""
 
-    meshes: ParametersConfigMeshes = field(default_factory=lambda: ParametersConfigMeshes())
+    meshes: ParametersConfigMeshes = field(default_factory=ParametersConfigMeshes)
     """Parameters for meshes subflow."""
 
-    projections: ParametersConfigProjections = field(
-        default_factory=lambda: ParametersConfigProjections()
-    )
+    projections: ParametersConfigProjections = field(default_factory=ParametersConfigProjections)
     """Parameters for projections subflow."""
 
     simularium_shapes: ParametersConfigSimulariumShapes = field(
-        default_factory=lambda: ParametersConfigSimulariumShapes()
+        default_factory=ParametersConfigSimulariumShapes
     )
     """Parameters for simularium shapes subflow."""
 
     simularium_objects: ParametersConfigSimulariumObjects = field(
-        default_factory=lambda: ParametersConfigSimulariumObjects()
+        default_factory=ParametersConfigSimulariumObjects
     )
     """Parameters for simularium objects subflow."""
+
+    tfe: ParametersConfigTFE = field(default_factory=ParametersConfigTFE)
+    """Parameters for TFE subflow."""
 
 
 @dataclass
@@ -288,16 +286,13 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
 
     Calls the following subflows, if the format is specified:
 
-    - :py:func:`run_flow_convert_to_colorizer`
     - :py:func:`run_flow_convert_to_images`
     - :py:func:`run_flow_convert_to_meshes`
     - :py:func:`run_flow_convert_to_projections`
     - :py:func:`run_flow_convert_to_simularium_shapes`
     - :py:func:`run_flow_convert_to_simularium_objects`
+    - :py:func:`run_flow_convert_to_tfe`
     """
-
-    if "colorizer" in parameters.formats:
-        run_flow_convert_to_colorizer(context, series, parameters.colorizer)
 
     if "images" in parameters.formats:
         run_flow_convert_to_images(context, series, parameters.images)
@@ -314,67 +309,8 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
     if "simularium_objects" in parameters.formats:
         run_flow_convert_to_simularium_objects(context, series, parameters.simularium_objects)
 
-
-@flow(name="convert-arcade-format_convert-to-colorizer")
-def run_flow_convert_to_colorizer(
-    context: ContextConfig, series: SeriesConfig, parameters: ParametersConfigColorizer
-) -> None:
-    """Convert ARCADE format subflow for colorizer."""
-
-    data_key = make_key(series.name, "data", "data.LOCATIONS")
-    converted_key = make_key(series.name, "converted", "converted.COLORIZER")
-    keys = [condition["key"] for condition in series.conditions]
-
-    for key in keys:
-        for seed in parameters.seeds:
-            series_key = f"{series.name}_{key}_{seed:04d}"
-
-            tar_key = make_key(data_key, f"{series_key}.LOCATIONS.tar.xz")
-            tar = load_tar(context.working_location, tar_key)
-
-            chunks = convert_to_images(
-                series_key,
-                tar,
-                parameters.frame_spec,
-                parameters.regions,
-                parameters.box,
-                parameters.chunk_size,
-                binary=False,
-                separate=True,
-                flatten=True,
-            )
-
-            for frame_index, (_, _, chunk, _) in enumerate(chunks):
-                image_key = make_key(converted_key, series_key, f"frame_{frame_index}.png")
-                save_image(context.working_location, image_key, chunk)
-
-            results_key = make_key(series.name, "results", f"{series_key}.csv")
-            results = load_dataframe(context.working_location, results_key)
-
-            colorizer = convert_to_colorizer(
-                results,
-                parameters.features,
-                parameters.frame_spec,
-                parameters.ds,
-                parameters.dt,
-                parameters.regions,
-            )
-
-            manifest_key = make_key(converted_key, series_key, "manifest.json")
-            save_json(context.working_location, manifest_key, colorizer["manifest"])
-
-            outliers_key = make_key(converted_key, series_key, "outliers.json")
-            save_json(context.working_location, outliers_key, colorizer["outliers"])
-
-            tracks_key = make_key(converted_key, series_key, "tracks.json")
-            save_json(context.working_location, tracks_key, colorizer["tracks"])
-
-            times_key = make_key(converted_key, series_key, "times.json")
-            save_json(context.working_location, times_key, colorizer["times"])
-
-            for feature_index, feature in enumerate(parameters.features):
-                feature_key = make_key(converted_key, series_key, f"feature_{feature_index}.json")
-                save_json(context.working_location, feature_key, colorizer[feature])
+    if "tfe" in parameters.formats:
+        run_flow_convert_to_tfe(context, series, parameters.tfe)
 
 
 @flow(name="convert-arcade-format_convert-to-images")
@@ -401,9 +337,7 @@ def run_flow_convert_to_images(
                 parameters.regions,
                 parameters.box,
                 parameters.chunk_size,
-                binary=parameters.binary,
-                separate=parameters.separate,
-                flatten=False,
+                parameters.image_type,
             )
 
             for i, j, chunk, frame in chunks:
@@ -440,7 +374,7 @@ def run_flow_convert_to_meshes(
                 parameters.frame_spec,
                 parameters.regions,
                 parameters.box,
-                parameters.invert,
+                parameters.mesh_type,
             )
 
             for frame, cell_id, region, mesh in meshes:
@@ -519,7 +453,6 @@ def run_flow_convert_to_simularium_shapes(
                 parameters.frame_spec,
                 parameters.box,
                 parameters.ds,
-                parameters.ds,
                 parameters.dt,
                 parameters.phase_colors,
                 parameters.resolution,
@@ -541,7 +474,7 @@ def run_flow_convert_to_simularium_objects(
 
     suffix = f"OBJECTS{parameters.group_size}"
     regions = ["DEFAULT", "NUCLEUS"]
-    invert = {"DEFAULT": True, "NUCLEUS": False}
+    mesh_type = {"DEFAULT": MeshType.INVERTED, "NUCLEUS": MeshType.DEFAULT}
 
     for key in keys:
         for seed in parameters.seeds:
@@ -563,7 +496,7 @@ def run_flow_convert_to_simularium_objects(
                 parameters.frame_spec,
                 regions,
                 parameters.box,
-                invert,
+                mesh_type,
                 parameters.group_size,
                 categories,
             )
@@ -578,10 +511,9 @@ def run_flow_convert_to_simularium_objects(
                 series_key,
                 "potts",
                 categories,
-                parameters.frame_spec,
                 regions,
+                parameters.frame_spec,
                 parameters.box,
-                parameters.ds,
                 parameters.ds,
                 parameters.dt,
                 parameters.phase_colors,
@@ -591,3 +523,54 @@ def run_flow_convert_to_simularium_objects(
 
             simularium_key = make_key(converted_key, f"{series_key}.{suffix}.simularium")
             save_text(context.working_location, simularium_key, simularium)
+
+
+@flow(name="convert-arcade-format_convert-to-tfe")
+def run_flow_convert_to_tfe(
+    context: ContextConfig, series: SeriesConfig, parameters: ParametersConfigTFE
+) -> None:
+    """Convert ARCADE format subflow for TFE."""
+
+    data_key = make_key(series.name, "data", "data.LOCATIONS")
+    converted_key = make_key(series.name, "converted", "converted.COLORIZER")
+    keys = [condition["key"] for condition in series.conditions]
+
+    for key in keys:
+        for seed in parameters.seeds:
+            series_key = f"{series.name}_{key}_{seed:04d}"
+
+            tar_key = make_key(data_key, f"{series_key}.LOCATIONS.tar.xz")
+            tar = load_tar(context.working_location, tar_key)
+
+            chunks = convert_to_images(
+                series_key,
+                tar,
+                parameters.frame_spec,
+                parameters.regions,
+                parameters.box,
+                parameters.chunk_size,
+                image_type=ImageType.FLAT_RGBA_BY_FRAME,
+            )
+
+            for frame_index, (_, _, chunk, _) in enumerate(chunks):
+                image_key = make_key(converted_key, series_key, f"frame_{frame_index}.png")
+                save_image(context.working_location, image_key, chunk)
+
+            results_key = make_key(series.name, "results", f"{series_key}.csv")
+            results = load_dataframe(context.working_location, results_key)
+            convert_model_units(results, parameters.ds, parameters.dt, parameters.regions)
+
+            tfe = convert_to_tfe(results, parameters.features, parameters.frame_spec)
+
+            manifest_key = make_key(converted_key, series_key, "manifest.json")
+            save_json(context.working_location, manifest_key, tfe["manifest"])
+
+            tracks_key = make_key(converted_key, series_key, "tracks.json")
+            save_json(context.working_location, tracks_key, tfe["tracks"])
+
+            times_key = make_key(converted_key, series_key, "times.json")
+            save_json(context.working_location, times_key, tfe["times"])
+
+            for feature in parameters.features:
+                feature_key = make_key(converted_key, series_key, f"feature_{feature}.json")
+                save_json(context.working_location, feature_key, tfe["features"][feature])

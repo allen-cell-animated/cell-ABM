@@ -9,20 +9,20 @@ license = "BSD-3-Clause"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = "^3.9"
 prefect = "^2.14.3"
 hydra-core = "^1.2.0"
-io-collection = "^0.10.1"
-container-collection = "^0.6.1"
-arcade-collection = "^0.15.0"
-abm-initialization-collection = "^0.6.1"
-abm-shape-collection = "^0.9.0"
-abm-colony-collection = "^0.4.0"
+io-collection = "^1.1.0"
+container-collection = "^1.1.0"
+arcade-collection = "^0.16.0"
+abm-initialization-collection = "^0.7.0"
+abm-shape-collection = "^0.10.0"
+abm-colony-collection = "^0.5.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^22.12.0"
+black = "^24.3.0"
 isort = "^5.12.0"
-mypy = "^1.4.1"
+mypy = "^1.10.0"
 pylint = "^2.16.2"
 pytest = "^7.3.0"
 pytest-cov = "^4.0.0"
@@ -34,6 +34,7 @@ sphinx-copybutton = "^0.5.2"
 tox = "^4.5.1"
 pre-commit = "^3.3.3"
 types-requests = "^2.31.0.2"
+ruff = "^0.6.3"
 
 [tool.poetry.scripts]
 abmpipe = "cell_abm_pipeline.__main__:main"
@@ -71,6 +72,7 @@ plugins = "src/cell_abm_pipeline/utilities/prefect_plugin.py"
 [[tool.mypy.overrides]]
 module = [
     "boto3.*",
+    "docker.*",
     "matplotlib.*",
     "mpl_toolkits.*",
     "pandas.*",
@@ -81,11 +83,55 @@ module = [
 ]
 ignore_missing_imports = true
 
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "C901",    # complex-structure
+    "COM812",  # missing-trailing-comma
+    "D100",    # undocumented-public-module
+    "D105",    # undocumented-magic-method
+    "D107",    # undocumented-public-init
+    "D202",    # no-blank-line-after-function
+    "D203",    # one-blank-line-before-class
+    "D212",    # multi-line-summary-first-line
+    "D401",    # non-imperative-mood
+    "D413",    # blank-line-after-last-section
+    "D416",    # section-name-ends-in-colon
+    "PLR0912", # too-many-branches
+    "PLR0915", # too-many-statements
+]
+
+[tool.ruff.lint.pylint]
+max-args = 10
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = [
+    "D",      # pydocstyle
+    "PT009",  # pytest-unittest-assertion
+    "PT027",  # pytest-unittest-raises-assertion
+    "INP001", # implicit-namespace-package
+    "ANN201", # missing-return-type-undocumented-public-function
+    "S311",   # suspicious-non-cryptographic-random-usage
+    "ANN001", # missing-type-function-argument
+    "ANN003", # missing-type-kwargs
+    "ANN202", # missing-type-args
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
+
 [tool.tox]
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py{39,310}, format, lint, typecheck
+envlist = py{39,310,311}, format, lint, typecheck
 skipsdist=True
 
 [testenv]
@@ -101,6 +147,7 @@ commands =
 [testenv:lint]
 commands =
     poetry run pylint --ignore-patterns=test.*?py src/ tests/ --fail-under=9.0
+    poetry run ruff check src/ tests/
 
 [testenv:typecheck]
 commands =

@@ -20,8 +20,9 @@ are placed into **samples.RAW** and corresponding contact sheet(s) are placed
 into **plots.SAMPLE**.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional
 
 from abm_initialization_collection.image import get_image_bounds, plot_contact_sheet
 from abm_initialization_collection.sample import (
@@ -54,7 +55,7 @@ class ParametersConfig:
     grid: str = "rect"
     """Type of sampling grid (rect = rectangular, hex = hexagonal)."""
 
-    coordinate_type: Optional[str] = None
+    coordinate_type: str | None = None
     """Coordinate scaling type (None = unscaled, absolute = in um, step = by step size)."""
 
     resolution: float = 1.0

@@ -37,10 +37,10 @@ into **analysis.CELL_SHAPES_DATA**. PCA models are saved to
 **analysis.CELL_SHAPES_STATISTICS**.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import timedelta
-from itertools import groupby
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -50,7 +50,7 @@ from abm_shape_collection import (
     fit_pca_model,
 )
 from arcade_collection.output import convert_model_units
-from io_collection.keys import check_key, make_key
+from io_collection.keys import check_key, group_keys, make_key
 from io_collection.load import load_dataframe, load_pickle
 from io_collection.save import save_dataframe, save_pickle
 from prefect import flow, get_run_logger
@@ -73,7 +73,7 @@ VALID_PHASES = ["PROLIFERATIVE_G1", "PROLIFERATIVE_S", "PROLIFERATIVE_G2"]
 class ParametersConfig:
     """Parameter configuration for analyze cell shapes flow."""
 
-    reference: Optional[dict] = None
+    reference: dict | None = None
     """Dictionary of keys for reference data and model for statistics."""
 
     regions: list[str] = field(default_factory=lambda: ["DEFAULT"])
@@ -82,10 +82,10 @@ class ParametersConfig:
     components: int = PCA_COMPONENTS
     """Number of principal components (i.e. shape modes)."""
 
-    ds: Optional[float] = None
-    """Spatial scaling in units/um."""
+    ds: float | None = None
+    """Spatial scaling in um/voxel."""
 
-    dt: Optional[float] = None
+    dt: float | None = None
     """Temporal scaling in hours/tick."""
 
     valid_phases: list[str] = field(default_factory=lambda: VALID_PHASES)
@@ -100,10 +100,10 @@ class ParametersConfig:
     sample_size: int = 100
     """Sample size for each tick for calculating stats with sampling."""
 
-    outlier: Optional[float] = None
+    outlier: float | None = None
     """Standard deviation threshold for outliers."""
 
-    features: list[str] = field(default_factory=lambda: [])
+    features: list[str] = field(default_factory=list)
     """List of features."""
 
 
@@ -172,23 +172,18 @@ def run_flow_process_properties(
     props_path_key = make_key(series.name, "calculations", "calculations.PROPERTIES")
     analysis_path_key = make_key(series.name, "analysis", f"analysis.{tag}")
 
-    keys = [condition["key"].split("_") for condition in series.conditions]
-    superkeys = {
-        superkey: ["_".join(k) for k in key_group]
-        for index in range(len(keys[0]))
-        for superkey, key_group in groupby(sorted(keys, key=lambda k: k[index]), lambda k: k[index])
-    }
+    key_groups = group_keys([condition["key"] for condition in series.conditions])
 
-    for superkey, key_group in superkeys.items():
-        logger.info("Processing properties for superkey [ %s ]", superkey)
-        analysis_key = make_key(analysis_path_key, f"{series.name}_{superkey}.{tag}.csv")
+    for key_group, keys in key_groups.items():
+        logger.info("Processing properties for key group [ %s ]", key_group)
+        analysis_key = make_key(analysis_path_key, f"{series.name}_{key_group}.{tag}.csv")
 
         if check_key(context.working_location, analysis_key):
             continue
 
         all_props = []
 
-        for key in key_group:
+        for key in keys:
             for seed in series.seeds:
                 props_key_template = f"{series.name}_{key}_{seed:04d}_%s.PROPERTIES.csv"
                 props = None
@@ -200,7 +195,7 @@ def run_flow_process_properties(
                     props_df = load_dataframe.with_options(**OPTIONS)(
                         context.working_location, props_key, converters={"KEY": str}
                     )
-                    props_df.set_index(INDEX_COLUMNS, inplace=True)
+                    props_df = props_df.set_index(INDEX_COLUMNS)
 
                     if props is None:
                         props = props_df
@@ -240,23 +235,18 @@ def run_flow_process_coefficients(
     coeffs_path_key = make_key(series.name, "calculations", "calculations.COEFFICIENTS")
     analysis_path_key = make_key(series.name, "analysis", f"analysis.{tag}")
 
-    keys = [condition["key"].split("_") for condition in series.conditions]
-    superkeys = {
-        superkey: ["_".join(k) for k in key_group]
-        for index in range(len(keys[0]))
-        for superkey, key_group in groupby(sorted(keys, key=lambda k: k[index]), lambda k: k[index])
-    }
+    key_groups = group_keys([condition["key"] for condition in series.conditions])
 
-    for superkey, key_group in superkeys.items():
-        logger.info("Processing coefficients for superkey [ %s ]", superkey)
-        analysis_key = make_key(analysis_path_key, f"{series.name}_{superkey}.{tag}.csv")
+    for key_group, keys in key_groups.items():
+        logger.info("Processing coefficients for key group [ %s ]", key_group)
+        analysis_key = make_key(analysis_path_key, f"{series.name}_{key_group}.{tag}.csv")
 
         if check_key(context.working_location, analysis_key):
             continue
 
         all_coeffs = []
 
-        for key in key_group:
+        for key in keys:
             for seed in series.seeds:
                 coeffs_key_template = f"{series.name}_{key}_{seed:04d}_%s.COEFFICIENTS.csv"
                 coeffs = None
@@ -268,7 +258,7 @@ def run_flow_process_coefficients(
                     coeffs_df = load_dataframe.with_options(**OPTIONS)(
                         context.working_location, coeffs_key, converters={"KEY": str}
                     )
-                    coeffs_df.set_index(INDEX_COLUMNS, inplace=True)
+                    coeffs_df = coeffs_df.set_index(INDEX_COLUMNS)
 
                     if coeffs is None:
                         coeffs = coeffs_df
@@ -311,12 +301,12 @@ def run_flow_combine_data(
     analysis_path_key = make_key(series.name, "analysis", f"analysis.{tag}")
 
     keys = [condition["key"] for condition in series.conditions]
-    superkeys = {key_group for key in keys for key_group in key.split("_")}
+    key_groups = group_keys(keys)
 
-    for superkey in superkeys:
-        logger.info("Combining data for superkey [ %s ]", superkey)
+    for key_group in key_groups:
+        logger.info("Combining data for key group [ %s ]", key_group)
 
-        key_template = f"{series.name}_{superkey}.%s.csv"
+        key_template = f"{series.name}_{key_group}.%s.csv"
         analysis_key = make_key(analysis_path_key, key_template % tag)
 
         if check_key(context.working_location, analysis_key):
@@ -324,21 +314,21 @@ def run_flow_combine_data(
 
         metrics_key = make_key(metrics_path_key, key_template % "BASIC_METRICS")
         metrics = load_dataframe.with_options(**OPTIONS)(context.working_location, metrics_key)
-        metrics.set_index(INDEX_COLUMNS, inplace=True)
+        metrics = metrics.set_index(INDEX_COLUMNS)
 
         props_key = make_key(props_path_key, key_template % "CELL_SHAPES_PROPERTIES")
         if check_key(context.working_location, props_key):
             props = load_dataframe.with_options(**OPTIONS)(context.working_location, props_key)
-            props.drop("time", axis=1, inplace=True, errors="ignore")
-            props.set_index(INDEX_COLUMNS, inplace=True)
+            props = props.drop("time", axis=1, errors="ignore")
+            props = props.set_index(INDEX_COLUMNS)
         else:
             props = None
 
         coeffs_key = make_key(coeffs_path_key, key_template % "CELL_SHAPES_COEFFICIENTS")
         if check_key(context.working_location, coeffs_key):
             coeffs = load_dataframe.with_options(**OPTIONS)(context.working_location, coeffs_key)
-            coeffs.drop("time", axis=1, inplace=True, errors="ignore")
-            coeffs.set_index(INDEX_COLUMNS, inplace=True)
+            coeffs = coeffs.drop("time", axis=1, errors="ignore")
+            coeffs = coeffs.set_index(INDEX_COLUMNS)
         else:
             coeffs = None
 
@@ -382,10 +372,10 @@ def run_flow_combine_data(
     logger.info("Combining data for all keys")
 
     combined_template = make_key(analysis_path_key, f"{series.name}_%s.{tag}.csv")
-    combined_data = []
-
-    for superkey in sorted(list({key.split("_")[0] for key in keys})):
-        combined_data.append(load_dataframe(context.working_location, combined_template % superkey))
+    combined_data = [
+        load_dataframe(context.working_location, combined_template % key_group)
+        for key_group in sorted({key.split("_")[0] for key in keys})
+    ]
 
     save_dataframe(context.working_location, combined_key, pd.concat(combined_data), index=False)
 
@@ -406,13 +396,12 @@ def run_flow_fit_models(
     data_path_key = make_key(series.name, "analysis", "analysis.CELL_SHAPES_DATA")
     model_path_key = make_key(series.name, "analysis", "analysis.CELL_SHAPES_MODELS")
 
-    keys = [condition["key"] for condition in series.conditions]
-    superkeys = {key_group for key in keys for key_group in key.split("_")}
+    key_groups = group_keys([condition["key"] for condition in series.conditions])
 
-    for superkey in superkeys:
-        logger.info("Fitting models for superkey [ %s ]", superkey)
+    for key_group in key_groups:
+        logger.info("Fitting models for key group [ %s ]", key_group)
 
-        key_template = f"{series.name}_{superkey}.%s"
+        key_template = f"{series.name}_{key_group}.%s"
         data_key = make_key(data_path_key, key_template % "CELL_SHAPES_DATA.csv")
         model_key = make_key(model_path_key, key_template % "CELL_SHAPES_MODELS.pkl")
 
@@ -420,7 +409,7 @@ def run_flow_fit_models(
             continue
 
         data = load_dataframe.with_options(**OPTIONS)(context.working_location, data_key)
-        ordering = data["volume"].values
+        ordering = data["volume"].to_numpy()
 
         # Get coefficient columns
         coeff_columns = [
@@ -429,7 +418,7 @@ def run_flow_fit_models(
             if ("." not in column and "DEFAULT" in parameters.regions)
             or ("." in column and column.split(".")[1] in parameters.regions)
         ]
-        coeffs = data[coeff_columns].values
+        coeffs = data[coeff_columns].to_numpy()
 
         if not coeffs.any():
             continue
@@ -457,8 +446,7 @@ def run_flow_analyze_stats(
     data_path_key = make_key(series.name, "analysis", "analysis.CELL_SHAPES_DATA")
     stats_path_key = make_key(series.name, "analysis", "analysis.CELL_SHAPES_STATISTICS")
 
-    keys = [condition["key"] for condition in series.conditions]
-    superkeys = {key_group for key in keys for key_group in key.split("_")}
+    key_groups = group_keys([condition["key"] for condition in series.conditions])
 
     if parameters.reference is None:
         return
@@ -476,10 +464,10 @@ def run_flow_analyze_stats(
         for feature in parameters.features
     ]
 
-    for superkey in superkeys:
-        logger.info("Fitting models for superkey [ %s ]", superkey)
+    for key_group in key_groups:
+        logger.info("Fitting models for key group [ %s ]", key_group)
 
-        key_template = f"{series.name}_{superkey}.%s"
+        key_template = f"{series.name}_{key_group}.%s"
         data_key = make_key(data_path_key, key_template % "CELL_SHAPES_DATA.csv")
         stats_key = make_key(stats_path_key, key_template % "CELL_SHAPES_STATISTICS.csv")
 

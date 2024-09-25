@@ -28,7 +28,7 @@ saved to **movies**.
 from dataclasses import dataclass, field
 
 import numpy as np
-from arcade_collection.output import get_voxel_contours
+from arcade_collection.convert import convert_to_contours
 from io_collection.keys import check_key, make_key
 from io_collection.load import load_dataframe, load_tar
 from io_collection.save import save_figure, save_gif
@@ -105,12 +105,10 @@ class ParametersConfig:
     formats: list[str] = field(default_factory=lambda: FORMATS)
     """List of movie formats."""
 
-    scan: ParametersConfigScan = field(default_factory=lambda: ParametersConfigScan())
+    scan: ParametersConfigScan = field(default_factory=ParametersConfigScan)
     """Parameters for scan movie subflow."""
 
-    centroids: ParametersConfigCentroids = field(
-        default_factory=lambda: ParametersConfigCentroids()
-    )
+    centroids: ParametersConfigCentroids = field(default_factory=ParametersConfigCentroids)
     """Parameters for centroids movie subflow."""
 
 
@@ -220,7 +218,7 @@ def run_flow_make_scan_movie(
 
             for frame in np.arange(*parameters.frame_spec):
                 frame_key = f"{series_key}_{parameters.view}_{frame:06d}"
-                contours = get_voxel_contours(
+                contours = convert_to_contours(
                     series_key,
                     tar,
                     frame,

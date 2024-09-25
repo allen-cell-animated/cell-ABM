@@ -80,7 +80,7 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
     all_neighbors = []
 
     for voxel_id, voxel_neighbors in neighbors_map.items():
-        voxel_neighbors = {
+        neighbors = {
             "ID": voxel_id,
             "GROUP": voxel_neighbors["group"],
             "NEIGHBORS": voxel_neighbors["neighbors"],
@@ -89,8 +89,8 @@ def run_flow(context: ContextConfig, series: SeriesConfig, parameters: Parameter
             "CZ": center_map[voxel_id][2],
             "DEPTH": depth_map[voxel_id],
         }
-        voxel_neighbors.update(attributes)
-        all_neighbors.append(voxel_neighbors)
+        neighbors.update(attributes)
+        all_neighbors.append(neighbors)
 
     neighbors_dataframe = pd.DataFrame(all_neighbors)
     neighbors_key = make_key(calc_key, f"{series_key}_{parameters.tick:06d}.NEIGHBORS.csv")

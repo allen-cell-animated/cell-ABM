@@ -38,9 +38,10 @@ Different groups can be visualized using the corresponding plotting workflow or
 loaded into alternative tools.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -227,10 +228,10 @@ class ParametersConfigFeatureComponents:
     components: int = PCA_COMPONENTS
     """Number of principal components."""
 
-    reference_metrics: Optional[str] = None
+    reference_metrics: str | None = None
     """Full key for reference metrics data."""
 
-    reference_properties: Optional[str] = None
+    reference_properties: str | None = None
     """Full key for reference properties data."""
 
 
@@ -258,16 +259,16 @@ class ParametersConfigFeatureCorrelations:
 class ParametersConfigFeatureDistributions:
     """Parameter configuration for group cell shapes subflow - feature distributions."""
 
-    reference_metrics: Optional[str] = None
+    reference_metrics: str | None = None
     """Full key for reference metrics data."""
 
-    reference_properties: Optional[str] = None
+    reference_properties: str | None = None
     """Full key for reference properties data."""
 
-    reference_coefficients: Optional[str] = None
+    reference_coefficients: str | None = None
     """Full key for reference coefficients data."""
 
-    reference_model: Optional[str] = None
+    reference_model: str | None = None
     """Full key for reference PCA model."""
 
     properties: list[str] = field(default_factory=lambda: DISTRIBUTION_PROPERTIES)
@@ -290,10 +291,10 @@ class ParametersConfigFeatureDistributions:
 class ParametersConfigModeCorrelations:
     """Parameter configuration for group cell shapes subflow - mode correlations."""
 
-    reference_model: Optional[str] = None
+    reference_model: str | None = None
     """Full key for reference PCA model."""
 
-    reference_data: Optional[str] = None
+    reference_data: str | None = None
     """Full key for reference coefficients data."""
 
     regions: list[str] = field(default_factory=lambda: ["DEFAULT"])
@@ -349,7 +350,7 @@ class ParametersConfigShapeAverage:
 class ParametersConfigShapeContours:
     """Parameter configuration for group cell shapes subflow - shape contours."""
 
-    regions: list[Optional[str]] = field(default_factory=lambda: ["DEFAULT"])
+    regions: list[str | None] = field(default_factory=lambda: ["DEFAULT"])
     """List of subcellular regions."""
 
     seed: int = 0
@@ -358,10 +359,10 @@ class ParametersConfigShapeContours:
     time: int = 0
     """Simulation time (in hours) to use for grouping shape contours."""
 
-    ds: Optional[float] = None
-    """Spatial scaling in units/um."""
+    ds: float | None = None
+    """Spatial scaling in um/voxel."""
 
-    dt: Optional[float] = None
+    dt: float | None = None
     """Temporal scaling in hours/tick."""
 
     projection: str = "top"
@@ -370,7 +371,7 @@ class ParametersConfigShapeContours:
     box: tuple[int, int, int] = field(default_factory=lambda: (1, 1, 1))
     """Size of projection bounding box."""
 
-    slice_index: Optional[int] = None
+    slice_index: int | None = None
     """Slice index along the shape projection axis."""
 
 
@@ -438,63 +439,59 @@ class ParametersConfig:
     """List of cell shapes groups."""
 
     feature_components: ParametersConfigFeatureComponents = field(
-        default_factory=lambda: ParametersConfigFeatureComponents()
+        default_factory=ParametersConfigFeatureComponents
     )
     """Parameters for group feature components subflow."""
 
     feature_correlations: ParametersConfigFeatureCorrelations = field(
-        default_factory=lambda: ParametersConfigFeatureCorrelations()
+        default_factory=ParametersConfigFeatureCorrelations
     )
 
     """Parameters for group feature correlations subflow."""
 
     feature_distributions: ParametersConfigFeatureDistributions = field(
-        default_factory=lambda: ParametersConfigFeatureDistributions()
+        default_factory=ParametersConfigFeatureDistributions
     )
     """Parameters for group feature distributions subflow."""
 
     mode_correlations: ParametersConfigModeCorrelations = field(
-        default_factory=lambda: ParametersConfigModeCorrelations()
+        default_factory=ParametersConfigModeCorrelations
     )
     """Parameters for group mode correlations subflow."""
 
     population_counts: ParametersConfigPopulationCounts = field(
-        default_factory=lambda: ParametersConfigPopulationCounts()
+        default_factory=ParametersConfigPopulationCounts
     )
     """Parameters for group population counts subflow."""
 
     population_stats: ParametersConfigPopulationStats = field(
-        default_factory=lambda: ParametersConfigPopulationStats()
+        default_factory=ParametersConfigPopulationStats
     )
     """Parameters for group population stats subflow."""
 
     shape_average: ParametersConfigShapeAverage = field(
-        default_factory=lambda: ParametersConfigShapeAverage()
+        default_factory=ParametersConfigShapeAverage
     )
     """Parameters for group shape average subflow."""
 
     shape_contours: ParametersConfigShapeContours = field(
-        default_factory=lambda: ParametersConfigShapeContours()
+        default_factory=ParametersConfigShapeContours
     )
     """Parameters for group shape contours subflow."""
 
-    shape_errors: ParametersConfigShapeErrors = field(
-        default_factory=lambda: ParametersConfigShapeErrors()
-    )
+    shape_errors: ParametersConfigShapeErrors = field(default_factory=ParametersConfigShapeErrors)
     """Parameters for group shape errors subflow."""
 
-    shape_modes: ParametersConfigShapeModes = field(
-        default_factory=lambda: ParametersConfigShapeModes()
-    )
+    shape_modes: ParametersConfigShapeModes = field(default_factory=ParametersConfigShapeModes)
     """Parameters for group shape modes subflow."""
 
     shape_samples: ParametersConfigShapeSamples = field(
-        default_factory=lambda: ParametersConfigShapeSamples()
+        default_factory=ParametersConfigShapeSamples
     )
     """Parameters for group shape samples subflow."""
 
     variance_explained: ParametersConfigVarianceExplained = field(
-        default_factory=lambda: ParametersConfigVarianceExplained()
+        default_factory=ParametersConfigVarianceExplained
     )
     """Parameters for group variance explained subflow."""
 
@@ -607,7 +604,7 @@ def run_flow_group_feature_components(
 
     # Create output data.
     feature_components = data[["KEY"]].copy()
-    feature_components.rename(columns={"KEY": "key"}, inplace=True)
+    feature_components = feature_components.rename(columns={"KEY": "key"})
     for comp in range(parameters.components):
         feature_components[f"component_{comp + 1}"] = transform[:, comp]
 
@@ -629,8 +626,8 @@ def run_flow_group_feature_components(
             context.working_location, parameters.reference_properties
         )
 
-        reference_metrics.set_index(index_columns, inplace=True)
-        reference_properties.set_index(index_columns, inplace=True)
+        reference_metrics = reference_metrics.set_index(index_columns)
+        reference_properties = reference_properties.set_index(index_columns)
 
         reference = reference_metrics.join(reference_properties, on=index_columns).reset_index()
         reference_zscore = (reference[columns] - pca_data_mean) / pca_data_std
@@ -673,10 +670,10 @@ def run_flow_group_feature_correlations(
 
         # Transform data into shape mode space.
         columns = data.filter(like="shcoeffs").columns
-        transform = model.transform(data[columns].values)
+        transform = model.transform(data[columns].to_numpy())
 
         for region in parameters.regions:
-            correlations: list[dict[str, Union[str, float]]] = []
+            correlations: list[dict[str, str | float]] = []
 
             for component in range(parameters.components):
                 mode_key = f"PC{component + 1}"
@@ -797,13 +794,15 @@ def run_flow_group_feature_distributions(
         data = load_dataframe.with_options(**OPTIONS)(context.working_location, dataframe_key)
 
         if parameters.reference_model is not None:
-            transform = ref_model.transform(data[ref_coeffs.filter(like="shcoeffs").columns].values)
+            transform = ref_model.transform(
+                data[ref_coeffs.filter(like="shcoeffs").columns].to_numpy()
+            )
             for component in range(parameters.components):
                 data[f"PC{component + 1}"] = transform[:, component]
 
         for feature, filtered in features:
             feature_column = feature.replace(".DEFAULT", "")
-            values = data[feature_column].values
+            values = data[feature_column].to_numpy()
 
             if filtered:
                 if ref_metrics is not None and feature_column in ref_metrics.columns:
@@ -886,7 +885,7 @@ def run_flow_group_mode_correlations(
             context.working_location, parameters.reference_data
         )
 
-    correlations: list[dict[str, Union[str, int, float]]] = []
+    correlations: list[dict[str, str | int | float]] = []
 
     for source_key in keys:
         for target_key in keys:
@@ -908,15 +907,15 @@ def run_flow_group_mode_correlations(
             # Transform the data.
             transform_source = model_source.transform(
                 np.append(
-                    data_source[columns_source].values,
-                    data_target[columns_source].values,
+                    data_source[columns_source].to_numpy(),
+                    data_target[columns_source].to_numpy(),
                     axis=0,
                 )
             )
             transform_target = model_target.transform(
                 np.append(
-                    data_source[columns_target].values,
-                    data_target[columns_target].values,
+                    data_source[columns_target].to_numpy(),
+                    data_target[columns_target].to_numpy(),
                     axis=0,
                 )
             )
@@ -1052,7 +1051,7 @@ def run_flow_group_shape_average(
 
         # Transform data into shape mode space.
         columns = data.filter(like="shcoeffs").columns
-        transform = model.transform(data[columns].values)
+        transform = model.transform(data[columns].to_numpy())
 
         # Select the cell closest to average.
         distance, index = KDTree(transform).query([0] * parameters.components)

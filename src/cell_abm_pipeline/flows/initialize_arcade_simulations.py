@@ -27,10 +27,12 @@ Images are loaded from **images**, which are then sampled and processed into
 **inits.ARCADE**.
 """
 
+from __future__ import annotations
+
 import copy
 from dataclasses import dataclass, field
-from typing import Optional
 
+import docker
 from arcade_collection.input import (
     convert_to_cells_file,
     convert_to_locations_file,
@@ -148,7 +150,7 @@ class ParametersConfig:
     """Configs for process samples flow, keyed by region."""
 
     convert_to_arcade: ParametersConfigConvertToArcade = field(
-        default_factory=lambda: ParametersConfigConvertToArcade()
+        default_factory=ParametersConfigConvertToArcade
     )
     """Convert to ARCADE configuration instance."""
 
@@ -163,10 +165,10 @@ class ContextConfig:
     reference_location: str
     """Location of reference file (local path or S3 bucket)."""
 
-    access_key_id: Optional[str] = None
+    access_key_id: str | None = None
     """AWS access key id for accessing S3 in Docker image."""
 
-    secret_access_key: Optional[str] = None
+    secret_access_key: str | None = None
     """AWS secret access key for accessing S3 in Docker image."""
 
 
@@ -215,6 +217,7 @@ def run_flow_sample_images(
     combination by passing in the subflow configuration as a dotlist.
     """
 
+    client = docker.APIClient(base_url="unix://var/run/docker.sock")
     docker_args = get_docker_arguments(context)
 
     if context.working_location.startswith("s3://"):
@@ -225,7 +228,7 @@ def run_flow_sample_images(
     series_config = SeriesConfigSampleImage(name=series.name)
 
     for fov in series.conditions:
-        for _, sample_image in parameters.sample_images.items():
+        for sample_image in parameters.sample_images.values():
             parameters_config = copy.deepcopy(sample_image)
             parameters_config.key = parameters_config.key % fov["key"]
             parameters_config.resolution = parameters.resolution
@@ -237,10 +240,10 @@ def run_flow_sample_images(
             }
 
             sample_image_command = SAMPLE_IMAGE_COMMAND + make_dotlist_from_config(config)
-            run_docker_command(parameters.image, sample_image_command, **docker_args)
+            run_docker_command(client, parameters.image, sample_image_command, **docker_args)
 
     if "volume" in docker_args:
-        remove_docker_volume(docker_args["volume"])
+        remove_docker_volume(client, docker_args["volume"])
 
 
 @flow(name="initialize-arcade-simulations_process-samples")
@@ -254,6 +257,8 @@ def run_flow_process_samples(
     The subflow `process_sample` is run via Docker for each condition and
     channel combination by passing in the subflow configuration as a dotlist.
     """
+
+    client = docker.APIClient(base_url="unix://var/run/docker.sock")
     docker_args = get_docker_arguments(context)
 
     if context.working_location.startswith("s3://"):
@@ -267,7 +272,7 @@ def run_flow_process_samples(
     for fov in series.conditions:
         fov_key = fov["key"]
 
-        for _, process_sample in parameters.process_samples.items():
+        for process_sample in parameters.process_samples.values():
             parameters_config = copy.deepcopy(process_sample)
             parameters_config.key = f"{parameters_config.key % fov_key}_{resolution_key}"
 
@@ -284,10 +289,10 @@ def run_flow_process_samples(
             }
 
             process_sample_command = PROCESS_SAMPLE_COMMAND + make_dotlist_from_config(config)
-            run_docker_command(parameters.image, process_sample_command, **docker_args)
+            run_docker_command(client, parameters.image, process_sample_command, **docker_args)
 
     if "volume" in docker_args:
-        remove_docker_volume(docker_args["volume"])
+        remove_docker_volume(client, docker_args["volume"])
 
 
 @flow(name="initialize-arcade-simulations_convert-to-arcade")
@@ -346,7 +351,7 @@ def run_flow_convert_to_arcade(
             )
             samples[region] = load_dataframe(context.working_location, key)
 
-        margins = fov["margins"] if "margins" in fov else parameters.convert_to_arcade.margins
+        margins = fov.get("margins", parameters.convert_to_arcade.margins)
         merged_samples = merge_region_samples(samples, margins)
         x, y, z = margins
         key = f"{series.name}_{fov['key']}_X{x:03d}_Y{y:03d}_Z{z:03d}_{resolution_key}"
@@ -377,6 +382,8 @@ def run_flow_convert_to_arcade(
 def get_docker_arguments(context: ContextConfig) -> dict:
     """Compile Docker arguments for the given context."""
 
+    docker_args: dict[str, str | list] = {}
+
     if context.working_location.startswith("s3://"):
         environment = []
 
@@ -386,9 +393,9 @@ def get_docker_arguments(context: ContextConfig) -> dict:
         if context.secret_access_key is not None:
             environment.append(f"AWS_SECRET_ACCESS_KEY={context.secret_access_key}")
 
-        docker_args = {"environment": environment}
+        docker_args["environment"] = environment
     else:
-        volume = create_docker_volume(context.working_location)
-        docker_args = {"volume": volume}
+        client = docker.APIClient(base_url="unix://var/run/docker.sock")
+        docker_args["volume"] = create_docker_volume(client, context.working_location)
 
     return docker_args

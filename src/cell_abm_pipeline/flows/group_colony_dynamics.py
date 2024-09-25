@@ -25,10 +25,11 @@ Different groups can be visualized using the corresponding plotting workflow or
 loaded into alternative tools.
 """
 
+from __future__ import annotations
+
 import ast
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -109,7 +110,7 @@ BANDWIDTH: dict[str, float] = {
 class ParametersConfigColonyContours:
     """Parameter configuration for group colony dynamics subflow - colony contours."""
 
-    regions: list[Optional[str]] = field(default_factory=lambda: ["DEFAULT"])
+    regions: list[str | None] = field(default_factory=lambda: ["DEFAULT"])
     """List of subcellular regions."""
 
     seed: int = 0
@@ -118,10 +119,10 @@ class ParametersConfigColonyContours:
     time: int = 0
     """Simulation time (in hours) to use for grouping colony contours."""
 
-    ds: Optional[float] = None
-    """Spatial scaling in units/um."""
+    ds: float | None = None
+    """Spatial scaling in um/voxel."""
 
-    dt: Optional[float] = None
+    dt: float | None = None
     """Temporal scaling in hours/tick."""
 
     projection: str = "top"
@@ -130,7 +131,7 @@ class ParametersConfigColonyContours:
     box: tuple[int, int, int] = field(default_factory=lambda: (1, 1, 1))
     """Size of projection bounding box."""
 
-    slice_index: Optional[int] = None
+    slice_index: int | None = None
     """Slice index along the colony projection axis."""
 
 
@@ -178,22 +179,22 @@ class ParametersConfig:
     """List of colony dynamics groups."""
 
     colony_contours: ParametersConfigColonyContours = field(
-        default_factory=lambda: ParametersConfigColonyContours()
+        default_factory=ParametersConfigColonyContours
     )
     """Parameters for group colony contours subflow."""
 
     feature_distributions: ParametersConfigFeatureDistributions = field(
-        default_factory=lambda: ParametersConfigFeatureDistributions()
+        default_factory=ParametersConfigFeatureDistributions
     )
     """Parameters for group feature distributions subflow."""
 
     feature_temporal: ParametersConfigFeatureTemporal = field(
-        default_factory=lambda: ParametersConfigFeatureTemporal()
+        default_factory=ParametersConfigFeatureTemporal
     )
     """Parameters for group feature temporal subflow."""
 
     neighbor_positions: ParametersConfigNeighborPositions = field(
-        default_factory=lambda: ParametersConfigNeighborPositions()
+        default_factory=ParametersConfigNeighborPositions
     )
     """Parameters for group neighbor positions subflow."""
 
@@ -320,7 +321,7 @@ def run_flow_group_feature_distributions(
         data = load_dataframe.with_options(**OPTIONS)(context.working_location, dataframe_key)
 
         for feature in parameters.features:
-            values = data[feature.upper()].values
+            values = data[feature.upper()].to_numpy()
 
             bounds = (parameters.bounds[feature][0], parameters.bounds[feature][1])
             bandwidth = parameters.bandwidth[feature]
