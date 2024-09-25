@@ -12,7 +12,7 @@ readme = "README.md"
 python = "^3.9"
 prefect = "^2.14.3"
 hydra-core = "^1.2.0"
-io-collection = { path = "../io-collection", develop = true }
+io-collection = "^1.1.0"
 container-collection = "^1.1.0"
 arcade-collection = "^0.16.0"
 abm-initialization-collection = { path = "../abm-initialization-collection", develop = true }
